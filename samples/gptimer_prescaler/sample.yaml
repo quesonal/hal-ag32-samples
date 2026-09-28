@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: gptimer_prescaler
+  description: Probes the GPTIMER0 PSC prescaler width, reporting the readback and the measured count rate for programmed values
+tests:
+  sample.gptimer_prescaler.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

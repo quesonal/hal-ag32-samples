@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable GPTIMER0 (gpt0) and leave `prescaler` at its default of 0, so the
+ * counter starts at the full pclk rate. This sample programs PSC directly to
+ * characterise the register, so the node-level value only sets the starting
+ * point.
+ *
+ * Note: the driver derives counter_get_frequency() from the DT property at
+ * compile time, so it goes stale once this sample writes PSC behind the
+ * driver's back. That is why nothing here calls counter_get_frequency() -- the
+ * measurement is made from the raw count rate instead.
+ */
+&gpt0 {
+	status = "okay";
+};
