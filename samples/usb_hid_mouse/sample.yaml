@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: usb_hid_mouse
+  description: |
+    USB0 HID mouse demo for AgRV2K (`the development notes (not published here)`, udc_agm
+    device-controller driver). The board enumerates as a full-speed HID
+    mouse and continuously sends relative X/Y reports that trace a
+    circle, so the host cursor moves by itself — no physical mouse or
+    GPIO keys required. Toggles LED0 once per report for a visual sign
+    of life.
+tests:
+  sample.usb_hid_mouse.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - usb
+      - udc
+      - hid
+      - agrv2k

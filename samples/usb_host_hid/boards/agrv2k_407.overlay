@@ -1,0 +1,19 @@
+/*
+ * Copyright (c) 2026 AgRV Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * USB0 as a host controller -- same arrangement as the other host samples:
+ * usb0 is disabled and the host node is enabled under the label the host
+ * stack looks up, because USB0 is one piece of silicon with one role at a
+ * time.
+ */
+
+&usb0 {
+	status = "disabled";
+};
+
+zephyr_uhc0: &uhc0 {
+	status = "okay";
+};

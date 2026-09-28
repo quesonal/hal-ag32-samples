@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_nor_flash
+  description: |
+    Zephyr SPI NOR flash driver over the AgRV2K SPI controller: JEDEC ID
+    check plus 256-byte page reads through the engine's RX DMA. Needs a
+    bitstream that routes the controller straight to the flash pins, so the
+    case is build_only.
+tests:
+  sample.spi_nor_flash.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

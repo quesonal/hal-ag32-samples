@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) 2026 AgRV Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * Enable the USB device controller (udc_agm → USB0) on the
+ * agrv2k_407 board, and bind a virtual CDC-ACM UART to it.
+ *
+ * This creates a DLM child of &zephyr_udc0 named `cdc_acm_uart0`
+ * that registers as a `zephyr,cdc-acm-uart` device. The CDC-ACM
+ * class driver presents it on the host as /dev/ttyACMx once the
+ * host enumerates USB0 (bus-powered, full-speed, single config,
+ * one COMM interface + one DATA interface).
+ *
+ * The "uart" naming is a Zephyr convention — `cdc_acm_uart0` is
+ * a virtual UART that bridges USB-CDC ↔ user code via
+ * uart_fifo_{read,fill} + uart_irq_* APIs. It does NOT touch any
+ * physical UART peripheral on the chip. UART0 hardware is
+ * reserved for the bitstream's CMSIS-DAP debug bridge; UART1
+ * hardware is not currently routed by the shipped bitstream.
+ */
+
+&zephyr_udc0 {
+	cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+		label = "AgRV2K USB CDC-ACM";
+	};
+};

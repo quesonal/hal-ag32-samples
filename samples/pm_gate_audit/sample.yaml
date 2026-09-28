@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: pm_gate_audit
+  description: |
+    Print SYS.APB_CLKENABLE at three points (boot, idle, every PM-aware
+    device pm_device_runtime_put) so the bitstream-declared gate set
+    can be cross-checked against what soc.c actually opens. Bench-only.
+tests:
+  sample.pm_gate_audit.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: plic_uart_irq
+  description: |
+    PLIC line 24 → plic_irq_handler → sw_isr_table dispatch demo
+    on agrv2k_407 (UART RX → PLIC → ISR).
+tests:
+  sample.plic_uart_irq.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - uart
+      - plic
+      - interrupt

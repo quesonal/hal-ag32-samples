@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: lcd_40pin
+  description: |
+    40-pin LCD adapter (FPC4301MS-L190-40C-9A / HX8369A 480x800) on a
+    bit-banged 16-bit 8080 bus. The adapter's pins are routed to GPIO banks by
+    the fabric, so this sample carries its own pin list and needs a bitstream
+    built from it -- hence build_only. See the the development notes (not published here).
+tests:
+  sample.lcd_40pin.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

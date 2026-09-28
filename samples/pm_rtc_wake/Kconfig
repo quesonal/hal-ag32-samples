@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config PM_RTC_WAKE_TEST_STANDBY
+	bool "Force soft-off (standby) at the end of the demo"
+	default n
+	help
+	  Run a final PM_STATE_SOFT_OFF round after the stop rounds. The
+	  1.2 V domain powers down for 6 s; the RTC alarm then wakes the
+	  SoC and pm.c reboots it, so no external power control is
+	  needed (SWD is unavailable during the standby window). The
+	  wake is reported on the next boot from a backup-domain marker.
+
+source "Kconfig.zephyr"

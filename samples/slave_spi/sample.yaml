@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: slave_spi
+  description: |
+    FPGA-side slave SPI smoke test on agrv2k_407 — the bitstream wires
+    the on-die SPI0/SPI1 master pair to user logic (sspi0/sspi1 AHB
+    slaves) so the MCU can drive them via direct MMIO + dma_agm. Ports
+    the AgRV SDK example slave_spi to Zephyr.
+tests:
+  sample.slave_spi.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - spi
+      - dma

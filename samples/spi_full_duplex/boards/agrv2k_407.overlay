@@ -1,0 +1,29 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Full-duplex SPI needs two devicetree pieces at once:
+ *
+ *   - the on-die controller that clocks the TX phase (SPI0 and/or SPI1,
+ *     whichever the bitstream routes to the pins), and
+ *   - the CPLD window, where the fabric patch keeps its control register
+ *     and the bytes it captured on MISO.
+ *
+ * Both are claimed here; the sample probes every enabled SPI controller.
+ */
+&spi0 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&cpld0 {
+	status = "okay";
+};
+
+/* The fabric RX FIFO raises ext_dma_DMACBREQ[0], so the sample needs the
+ * DMA controller too (channel/request numbers are Kconfig: they are bitstream
+ * properties, not devicetree ones here). */
+&dma0 {
+	status = "okay";
+};

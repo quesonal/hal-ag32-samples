@@ -1,0 +1,22 @@
+# Config options for the cpld_reg sample application
+
+# Copyright (c) 2026 AgRV Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "AgRV2K CPLD window sample"
+
+config APP_CPLD_ECHO_TEST
+	bool "Run the fabric write/read-back self test"
+	default n
+	help
+	  After the read-only dump, write a pattern to +0x00 and read it back
+	  from +0x04, the register pair implemented by the vendor echo
+	  bitstream (example_cpldAhbTxRxReg/logic/analog_ip.v).
+
+	  Leave this off on a bitstream whose +0x00 is not a scratch register
+	  (the ADC/SPI examples decode real hardware there, so a blind write
+	  would reprogram it). Turning it on against a window with no slave at
+	  +0x00/+0x04 stalls the CPU (no AHB hreadyout), which is why the
+	  sample cannot probe for it.
+
+source "Kconfig.zephyr"

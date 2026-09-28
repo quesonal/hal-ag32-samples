@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: flash_internal
+  description: |
+    On-die flash driver self-test: erase a scratch sector, program a pattern,
+    read it back, and check the negative cases (unaligned write, out-of-range
+    erase, programming over a non-erased word). The scratch sector lives just
+    below the fabric bitstream reservation, so the case needs the 407 board
+    and is build_only.
+tests:
+  sample.flash_internal.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

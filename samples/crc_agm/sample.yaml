@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: crc_agm
+  description: |
+    CRC32/ISO-HDLC through the AgRV2K CRC unit (drivers/crc/crc_agm.c):
+    self-checks against the standard check value, verifies that Zephyr's
+    crc32_ieee() is the hardware-backed one, and prints the cycles it took
+    over a 99944-byte buffer (the fabric-slot size the loader CRCs on every
+    boot). Needs the dev board to run, so the case is build_only.
+tests:
+  sample.crc_agm.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

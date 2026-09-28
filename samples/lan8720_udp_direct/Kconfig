@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Sample-local Kconfig. `source "Kconfig.zephyr"` is required so the
+# CONFIG_NET_* references in prj.conf resolve at parse time.
+
+source "Kconfig.zephyr"
+
+menuconfig LAN8720_UDP_DIRECT
+	bool "lan8720_udp_direct sample"
+	default y
+	help
+	  Hand-built Ethernet/IP/UDP frames carrying iperf2-compatible UDP
+	  datagrams, handed straight to the driver through a packet socket.
+	  Measures what the board can push when the socket/IP/UDP stack is
+	  out of the way, while still being verifiable with `iperf -s -u`.
+
+if LAN8720_UDP_DIRECT
+
+config LAN8720_UDP_DIRECT_SERVER_IP
+	string "iperf2 UDP server IPv4 address"
+	default "192.168.15.100"
+	help
+	  Must be in the same /24 as CONFIG_NET_CONFIG_MY_IPV4_ADDR. Run
+	  `iperf -s -u` there (iperf2, not iperf3).
+
+config LAN8720_UDP_DIRECT_SERVER_PORT
+	int "iperf2 UDP server port"
+	default 5001
+	range 1 65535
+
+config LAN8720_UDP_DIRECT_DURATION_MS
+	int "Upload duration (ms)"
+	default 10000
+	range 100 600000
+
+config LAN8720_UDP_DIRECT_PACKET_SIZE
+	int "On-the-wire frame size (bytes)"
+	default 1502
+	range 82 1514
+	help
+	  Total frame: 14 Ethernet + 20 IP + 8 UDP + 40 iperf2 header +
+	  payload, no FCS. 1502 is the maximum that keeps an unfragmented
+	  1500 B IP packet, i.e. the same thing the stack-based UDP path
+	  puts on the wire, so the two numbers are comparable.
+
+config LAN8720_UDP_DIRECT_MIN_MBITPS
+	int "Minimum throughput for PASS (Mbit/s)"
+	default 1
+	range 0 1000
+	help
+	  Threshold for the sample's own PASS/FAIL line. 0 disables it.
+
+endif # LAN8720_UDP_DIRECT

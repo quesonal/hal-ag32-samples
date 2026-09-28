@@ -1,0 +1,41 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * The payload is linked XIP into the application slot that
+ * samples/spi_boot_loader owns -- that is the only place it runs, now that the
+ * legacy `mode external` (copy to SRAM) path is gone.
+ * With the default layout that slot is 0x8007c000 + 200 KiB (see
+ * boards/agrv2k_407.overlay there: loader 96 KiB, record, two 200 KiB sides,
+ * then the slot; the fabric reservation starts at 0x800e7000).
+ *
+ * Build it with:
+ *   west build -d /tmp/b_boot_app_slot -b agrv2k_407 --pristine=auto \
+ *       modules/hal_ag32/samples/spi_boot_app
+ * (the signed flow adds -DCONFIG_ROM_START_OFFSET=0x20, see sample.yaml)
+ */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		slot_internal: partition@8007e000 {
+			label = "slot_internal";
+			reg = <0x8007c000 0x32000>;
+		};
+	};
+};
+
+/ {
+	chosen {
+		/* Pointing zephyr,flash at the slot (instead of the whole
+		 * flash0) is what actually moves the link address on this
+		 * architecture: the RISC-V linker takes the ROM origin from
+		 * that chosen node's base, and CONFIG_FLASH_LOAD_OFFSET is 0
+		 * here (Zephyr's USE_DT_CODE_PARTITION/load-offset machinery
+		 * only shifts ARM-style linkers -- measured 2026-09-17: with
+		 * only code-partition set, the image still linked at
+		 * 0x80000000). */
+		zephyr,flash = &slot_internal;
+		zephyr,code-partition = &slot_internal;
+	};
+};

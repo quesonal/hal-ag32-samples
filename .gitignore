@@ -1,0 +1,23 @@
+# Build outputs (twister, west/cmake artifacts).
+# Local review scratchpads (workspace-only; conclusions go into docs/).
+code_review/
+
+# Sample build outputs (west/cmake artifacts, ~30 MB each).
+build/
+twister-out/
+
+# Editor backups / temporary files.
+*~
+*.swp
+*.bak
+
+# Canonical bitstream artefacts. They are *not* redistributed with this
+# repository -- samples/bitstreams/README.md points the reader at their
+# own copy. The build picks one up automatically when the user passes it
+# via AGM_BITSTREAM_BIN.
+/samples/bitstreams/example_board.bin
+/samples/bitstreams/example_board.ve
+
+# Python cache.
+__pycache__/
+*.pyc

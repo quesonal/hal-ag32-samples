@@ -1,0 +1,8 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable DMAC0 on agrv2k_407. The dma_agm driver enables the AHB
+ * clock / reset itself at init.
+ */
+&dma0 {
+	status = "okay";
+};

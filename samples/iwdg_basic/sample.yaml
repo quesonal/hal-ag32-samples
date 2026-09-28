@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: iwdg_basic
+  description: |
+    IWDG (agm,agrv2k-iwdg) backup-domain independent watchdog reset
+    smoke test on agrv2k_407.
+tests:
+  sample.iwdg_basic.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+
+  # Device-testing (HIL): the sample confirms the reset it caused by reading
+  # RST_CNTL back in its second run (~12 s: arm, five feeds, then the reset).
+  sample.iwdg_basic.hil.agm_agrv2k_407:
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "iwdg_basic: IWDG reset confirmed \\(run #2 PASS\\)"
+    timeout: 90
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - hil
+      - hal_ag32

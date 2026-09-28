@@ -1,0 +1,34 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * The on-board SPI NOR, driven by the Zephyr spi-nor flash driver through
+ * the AgRV2K SPI controller.
+ *
+ * This needs a bitstream that routes the controller straight to the pins
+ * (the vendor stock one routes SPI1 there); with the CPLD full-duplex
+ * patch MISO never returns to the controller, so spi-nor cannot work on
+ * such a bitstream.
+ *
+ * The part does not implement SFDP, so the driver synthesizes a minimal
+ * configuration from `jedec-id` and `size` (CONFIG_SPI_NOR_SFDP_MINIMAL).
+ */
+&spi1 {
+	status = "okay";
+
+	spi_nor: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		/* SYSCLK/4: fast enough for a whole-flash scan, well inside what
+		 * the part and the pin routing tolerate. */
+		spi-max-frequency = <25000000>;
+		jedec-id = [68 40 15];
+		/* The binding says "flash capacity in bits": 16 Mbit = 2 MiB
+		 * (the RDID capacity code 0x15 is 2^21 bytes). Getting this
+		 * wrong by 8x is silent -- the driver just refuses reads past
+		 * the (wrong) end with -EINVAL. */
+		size = <0x1000000>;
+	};
+};
+
+&dma0 {
+	status = "okay";
+};

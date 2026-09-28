@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: elink_monitor
+  description: |
+    Pervasive Displays E2271CS091 (2.7", 264x176, G2/iTC COG) e-paper on the
+    AgRV2K, wired identically to samples/elink so the stock 200 MHz bitstream
+    serves both. A "monitoring console" -- CPU / MEM / TEMP / LOAD / NET TX /
+    NET RX tiles, a CPU sparkline and a status footer -- that loops every 15 s
+    on top of the same panel flow. Data is synthesised from a PRNG seeded by
+    the cycle index, so the page is deterministic per cycle.
+
+    The panel only supports full refresh (no partial / fast), so each tick is
+    exactly the elink sample's "two frames + 0x04 + 0x12 + 0x02" sequence; the
+    user sees one frame for ~15 s before the next paint. build_only: the board
+    is not guaranteed to have the panel attached.
+tests:
+  sample.elink_monitor.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

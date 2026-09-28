@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: timer_alarm
+  description: Dual-timer (TIMER0) alarm smoke test on agrv2k_407 (AGM counter driver)
+tests:
+  sample.timer_alarm.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: rtc_alarm
+  description: RTC backup-domain counter + alarm smoke test on agrv2k_407
+tests:
+  sample.rtc_alarm.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+
+  # Device-testing (HIL): the sample prints its own verdict after the third
+  # alarm, which takes ~20 s (1 Hz counter, three 5 s alarms).
+  sample.rtc_alarm.hil.agm_agrv2k_407:
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "rtc_alarm: alarm cancelled \\(err [0-9]+\\) - PASS"
+    timeout: 90
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - hil
+      - hal_ag32

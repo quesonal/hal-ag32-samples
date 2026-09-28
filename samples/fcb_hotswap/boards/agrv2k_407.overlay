@@ -1,0 +1,94 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * fcb_hotswap — 100 MHz SYSCLK overlay.
+ *
+ * Both dev board bitstreams ($HOME/spi_full_bitstream_97pad/example_board.bin in
+ * slot A, $HOME/spi_full_bitstream_without_flash/example_board.bin in slot B)
+ * are 100 MHz / HSECLK 8 designs, while the agrv2k_407 dts assumes the 200 MHz
+ * vendor image. A hot swap cannot fix a clock-class mismatch: the new fabric
+ * *is* the clock, so the console would come back as garbage instead of
+ * proving anything. Keep the DT and both bitstreams on the same rate.
+ *
+ * Same shape as samples/fcb_reload/boards/agrv2k_407.overlay.
+ */
+#define AGM_BENCH_SYSCLK_HZ 100000000
+
+&clk0 {
+	clock-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+&cpu0 {
+	clock-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+/* The pin map carries the number the bitstream is rendered from; keep it
+ * on the same rate as the firmware clocks above (generate_board_ve.py
+ * fails otherwise). */
+&agrv2k_pins {
+	sysclk-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+/* FLASH ceiling. The 407 board default (100 MHz) makes the SCLK divider 0
+ * (SCLK == SYSCLK); the proven dev board pair for these vendor bitstreams is
+ * SYSCLK 100 / FLASH ceiling 50 (the same numbers the agrv2k_103 board and
+ * the SPI dev boards' /tmp/agm100.overlay use), i.e. divider 1. Keep it explicit
+ * here so the sample is reproducible without that out-of-tree file — the
+ * hot swap re-derives this value from DT at swap time.
+ */
+&sys {
+	flash-max-frequency = <50000000>;
+};
+
+/* The RDID probe reads whichever controller the live fabric routes to the
+ * SPI NOR; route both so the probe can report "answers" vs "nothing". */
+&spi0 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+};
+
+/* AHB clock/reset for the SPI engine's DMA support. */
+&dma0 {
+	status = "okay";
+};
+
+/*
+ * The two fabric slots this sample juggles, as devicetree partitions, so
+ * their addresses are a layout fact instead of a Kconfig knob (2026-09-24).
+ *
+ * `reg` is the *absolute* address here: on this tree edtlib does not
+ * translate fixed-partitions children (the parent flash node has no
+ * `ranges`), and the samples that point /chosen/zephyr,code-partition at one
+ * of these link at the number written here -- measured with
+ * samples/spi_boot_app, whose `reg = <0x8007c000 …>` comes out as
+ * CONFIG_FLASH_BASE_ADDRESS = 0x8007c000. So the C side reads DT_REG_ADDR(),
+ * not DT_FIXED_PARTITION_ADDR() (that one adds the parent's base again and
+ * would answer 0x1000e7000).
+ *
+ * src/main.c asserts both against the SoC's own constants
+ * (AGM_BITSTREAM_FACTORY_ADDR / AGM_BITSTREAM_SLOT2_ADDR): the FCB and the
+ * FLASH option byte use those whether or not this devicetree agrees, so a
+ * partition that drifted has to fail the build rather than silently write
+ * somebody else's region.
+ */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Slot A: the factory slot, what the option byte points at. */
+		hotswap_slot_a: partition@800e7000 {
+			label = "hotswap_slot_a";
+			reg = <0x800e7000 0x19000>;
+		};
+
+		/* Slot B: the fabric update slot that is *not* live. */
+		hotswap_slot_b: partition@800cd000 {
+			label = "hotswap_slot_b";
+			reg = <0x800cd000 0x19000>;
+		};
+	};
+};

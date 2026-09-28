@@ -1,0 +1,25 @@
+/*
+ * Copyright (c) 2026 AgRV Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * USB0 as a host controller.
+ *
+ * The board enables the *device* role by default (zephyr_udc0: &usb0). USB0
+ * is one piece of silicon with one role at a time, so the two nodes are
+ * mutually exclusive: disable usb0, enable the host node and give it the
+ * zephyr_uhc0 label the host stack looks up.
+ *
+ * The bitstream has to present USB0 in host mode too (or OTG, which the
+ * driver overrides with USBMODE.CM = host); DP/DM are the fixed PIN_70/71
+ * pins and need no pinctrl.
+ */
+
+&usb0 {
+	status = "disabled";
+};
+
+zephyr_uhc0: &uhc0 {
+	status = "okay";
+};

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: elink
+  description: |
+    Pervasive Displays E2271CS091 (2.7", 264x176, G2/iTC COG) e-paper on the
+    AgRV2K, wired to the same pins as the 40-pin LCD sample so one bitstream
+    serves both. Full updates only -- this panel has no partial/fast refresh.
+    build_only: the board is not guaranteed to have the panel attached.
+tests:
+  sample.elink.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

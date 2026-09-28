@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: board_info
+  description: |
+    Print the devicetree this image was built against -- SYSCLK, cpu0,
+    the FLASH ceiling, the enabled AGM nodes -- plus a hand-edited marker
+    and the build timestamp. It is the cheap canary for "is the running
+    firmware the one I just built, against the devicetree I think it
+    used": the 100 MHz bitstream / 200 MHz board-default mismatch shows
+    up here before anywhere else.
+tests:
+  sample.board_info.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

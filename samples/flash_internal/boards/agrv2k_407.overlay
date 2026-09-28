@@ -1,0 +1,33 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Scratch area for the self-test: one 4 KiB sector inside the on-die
+ * *application slot* region (0x8007c000..0x800ae000), which this build does
+ * not use -- it has the flash driver but not the bootloader driver.
+ *
+ * It used to be 0x800e6000 ("the last sector below the fabric reservation").
+ * That address is the fabric A/B *record* sector (AGM_BITSTREAM_RECORD_ADDR),
+ * which soc.c/fcb.c reads in *every* image, with or without the boot driver:
+ * erasing it silently drops a committed bitstream A/B choice back to the
+ * factory slot. Keep the scratch below 0x800ae000, where the fabric slots,
+ * the bind-salt sector and that record all live. See docs/FLASH-LAYOUT.md.
+ *
+ * The test restores it to erased (0xff) before it finishes.
+ */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Zephyr's fixed-partitions children carry the *absolute*
+		 * address (the flash lives at 0x80000000), not an offset from
+		 * the parent's reg -- writing 0xe6000 here silently produced a
+		 * partition at 0x00e6000, i.e. outside the flash, and the
+		 * sample's scratch offset underflowed (measured 2026-09-17).
+		 */
+		flash_agm_scratch: partition@800a0000 {
+			label = "flash_agm_scratch";
+			reg = <0x800a0000 0x1000>;
+		};
+	};
+};

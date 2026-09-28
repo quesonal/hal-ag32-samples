@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: usb_msc_dfu_boot
+  description: |
+    UF2-style USB MSC upload channel for samples/spi_boot_loader's DFU.
+
+    A payload image (linked XIP into the loader's on-die application slot,
+    like samples/spi_boot_app) that publishes a fake 64 MiB FAT16 volume so a
+    host can copy a .uf2 onto a drive. Each 512 B write is parsed as a UF2
+    block and its payload streamed straight into the loader's A/B store
+    through the boot driver; the last block closes the MSC interface and the
+    board reboots. It is the USB MSC path next to the loader's console /
+    AN3155 / mcumgr upload paths, modelled on a UF2 bootloader.
+
+    Hardware-dependent (needs the loader, the bitstream routing and a USB
+    host), so the cases are build_only.
+tests:
+  sample.usb_msc_dfu_boot.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - usb
+      - udc
+      - msc
+      - dfu
+      - boot

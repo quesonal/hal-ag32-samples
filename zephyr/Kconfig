@@ -1,0 +1,4 @@
+# Placeholder Kconfig so `west build` doesn't complain when this repo is
+# the workspace anchor. The samples only enable `CONFIG_BOARD` and the
+# rest come from hal_ag32.
+rsource "Kconfig.samples"

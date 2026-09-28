@@ -1,0 +1,103 @@
+# Config options for the spi_full_duplex sample application
+
+# Copyright (c) 2026 AgRV Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "AgRV2K full-duplex (CPLD-assisted) SPI sample"
+
+menu "Full-duplex SPI fabric layout"
+
+config APP_SPI_FULL_CTRL_OFFSET
+	int "Window offset of the fabric SPI control register"
+	default 0
+	help
+	  Offset of the CTRL register inside the CPLD window. The vendor's
+	  full_duplex_spi.v example puts it at the start of the window
+	  (ADDR_OFFSET_SPI0 = 0 in example_spi_advanced.c); boards that merge
+	  other fabric logic shift it.
+
+config APP_SPI_FULL_DATA_OFFSET
+	int "Window offset of the fabric SPI RX data register"
+	default 4
+	help
+	  Offset of the register that holds the bytes the fabric captured on
+	  MISO during the TX phase (the vendor example's SPI0_DATA).
+
+choice APP_SPI_FULL_CONTROLLER
+	prompt "SPI controller the fabric patch taps"
+	default APP_SPI_FULL_CONTROLLER_SPI0
+	help
+	  The fabric drives the pins from one controller's SCK/CSN/MOSI (the VE
+	  lines `SPI0_SCK sck` etc.), so only that controller can clock a
+	  full-duplex transfer. The fabric has no capture-clear, so testing a
+	  controller it does not tap reads the previous capture back -- which is
+	  why this is an explicit choice rather than auto-detection.
+
+config APP_SPI_FULL_CONTROLLER_SPI0
+	bool "SPI0 (0x40012000)"
+
+config APP_SPI_FULL_CONTROLLER_SPI1
+	bool "SPI1 (0x40013000)"
+
+endchoice
+
+config APP_SPI_FULL_CPOL
+	bool "Drive CPOL = 1 (clock idles high)"
+	default n
+	help
+	  The on-die engine has no polarity/phase bits: the fabric patch does,
+	  so this writes CPOL into the window control register while the phase
+	  engine stays in its default timing.
+
+config APP_SPI_FULL_CPHA
+	bool "Drive CPHA = 1 (sample on the second edge)"
+	default n
+
+config APP_SPI_FULL_EXPECT_ID
+	hex "Expected JEDEC ID of the device on the bus (0 = skip the check)"
+	default 0
+	help
+	  Optional regression anchor. The sample always cross-checks two 0x9F
+	  captures against each other; setting this (e.g. 0x684015) additionally
+	  requires the device to be the one you expect.
+
+endmenu
+
+config APP_SPI_FULL_LOOPBACK
+	bool "Expect a MOSI->MISO jumper and check that TX comes back verbatim"
+	default n
+	help
+	  With the fabric full-duplex path the RX bytes are captured while the
+	  on-die engine clocks the TX phase, so a jumper between the MOSI and
+	  MISO pins turns the transfer into a loopback. Off by default: with a
+	  device on the bus the answer is whatever the device drives, not the
+	  transmitted pattern.
+
+menu "Fabric RX FIFO drain (long transfers)"
+
+config APP_SPI_FULL_DMA
+	bool "Drain the fabric RX FIFO with DMA"
+	default y
+	help
+	  With the fabric CTRL's DMA_EN set, the patch pushes one 32-bit word
+	  per four captured bytes into a 256-word FIFO and raises
+	  ext_dma_DMACBREQ[0]. A DMA channel (PERIPHERAL_TO_MEMORY, fixed source
+	  = the window data register) moves that into the caller's buffer, which
+	  is what makes captures longer than four bytes possible.
+
+config APP_SPI_FULL_DMA_CHANNEL
+	int "DMA channel used for the fabric RX FIFO"
+	default 5
+	help
+	  The vendor example uses DMAC_CHANNEL5 for the SPI RX direction.
+
+config APP_SPI_FULL_DMA_REQUEST
+	int "Peripheral request line of the fabric RX FIFO"
+	default 1
+	help
+	  ext_dma_DMACBREQ[0] is wired to the EXT_DMA0 request line
+	  (EXT_DMA0_REQ = 1 in the SDK).
+
+endmenu
+
+source "Kconfig.zephyr"

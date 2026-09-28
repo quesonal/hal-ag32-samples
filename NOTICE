@@ -1,0 +1,69 @@
+hal_ag32 — NOTICE
+================
+
+This repository is licensed under the Apache License, Version 2.0 (see
+LICENSE). Its C sources, devicetree, CMake, Kconfig and script files all
+carry an SPDX-License-Identifier: Apache-2.0 tag; the machine-readable
+metadata that Zephyr's own tree also ships without one (board.yml,
+soc.yml, sample prj.conf) does not, and
+boards/agm/agrv2k/shared/agrv_fpga_decomp.inc is generated output.
+
+Two things are worth stating explicitly, because this module targets the
+AGM AgRV2K SoC and was written with the vendor SDK and vendor
+documentation at hand.
+
+
+1. Files derived from Zephyr
+---------------------------
+
+  drivers/serial/uart_agm.c
+  drivers/serial/uart_pl011_registers.h
+
+are derived from Zephyr's drivers/serial/uart_pl011.c and its register
+header. The original copyright holders are retained in the file headers:
+
+  Copyright (c) 2018 Linaro Limited
+  Copyright (c) 2022 Arm Limited (or its affiliates). All rights reserved.
+  Copyright (c) 2023 Antmicro <www.antmicro.com>
+
+The fork base is recorded in the header of uart_agm.c (Zephyr commit
+403a7d79adbce610cb611912190ba066d7c8903f — the same SHA that west.yml
+pins, bumped from 8a4e180b93ec11459d0395ad8a8afd51e1ead2a3 on
+2026-09-13) together with the four deltas this module carries, and the
+rebase procedure is in `the development notes (not published here)`.
+The remaining drivers (drivers/{can,counter,dma,i2c,pwm,usb/udc,watchdog})
+and the SoC glue (soc/agm/agrv2k/) are written for this module; they link
+against, but do not copy, in-tree Zephyr code (can_sja1000.c,
+udc_common.c); that dependency list is in the same development notes.
+
+2. Vendor material that is NOT distributed here
+-----------------------------------------------
+
+This repository does not distribute the AgRV PlatformIO SDK
+("AgRV_pio") or any of its packages, nor any AGM/AgRV vendor document.
+That includes, but is not limited to:
+
+  * framework-agrv_sdk / framework-agrv_ips — the vendor SDK headers and
+    startup/clock sources that this port's SoC code was written against
+  * tool-agrv_logic — the Supra logic/bitstream toolchain, which is
+    node-locked (the SDK ships a LICENSE_NODE_LOCKED blob)
+  * tool-agrv_openocd — the vendor OpenOCD build
+  * tool-agrv_jlink and the SEGGER RTT sources — SEGGER Microcontroller
+    GmbH terms apply
+  * the AGM/AGRV vendor documents (reference manual, VE configuration and
+    logic notes, pinout tables, datasheets)
+
+The tools and documents this module refers to must be obtained by the
+user from AGM / the vendor (https://www.alta-gate.com) or with the SDK,
+and are governed by their own terms. This module only invokes them at
+build/flash time.
+
+Provenance note: the AGM driver and SoC code here is a behavioural
+re-implementation informed by the vendor SDK and vendor documentation.
+No vendor or third-party source text was copied into this repository —
+the only lines shared with the SDK's AGM-authored code are two array
+comparisons in samples/slave_spi (whose example is under the vendor
+platform manifest's Apache-2.0 declaration). The vendor SDK's
+framework packages themselves ship no license file and no SPDX headers;
+if you redistribute parts of this module, keep the points above in mind
+and get your own legal reading on the SDK if that matters to you.

@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: usb_msc_dfu
+  description: |
+    Composite USB0 MSC + DFU device for AgRV2K.
+
+    The device enumerates full-speed with two interfaces on one
+    configuration: an MSC (Bulk-Only Transport) LUN backed by an in-RAM
+    disk, and a DFU runtime interface. `dfu-util --detach` switches the
+    same device into DFU mode, where the in-RAM disk is served as the DFU
+    image "ramdisk0" so the image can be downloaded/uploaded over the DFU
+    class. The disk the host sees over MSC and the DFU image are the same
+    sectors.
+
+    Needs a USB host on USB0 and the debug UART (UART0) for the console.
+tests:
+  sample.usb_msc_dfu.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - usb
+      - udc
+      - msc
+      - dfu
+      - agrv2k

@@ -1,0 +1,139 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * spi_quad_read routes SPI0 through the fabric's quad path -- IO2/IO3 go
+ * to the flash's WP#/HOLD# pins (PIN_98/PIN_95 on this board). The board's
+ * *default* pin map does not (it routes SPI0 to the header pins), which is why
+ * this overlay exists: it is the pin map for this sample's own bitstream.
+ * Two already-synthesized bitstreams can stand in for it -- the vendor
+ * reference ~/spi_full_mac_bitstream_200mhz/example_board.bin (200 MHz,
+ * measured 2026-09-25) and ~/spi_full_bitstream_97pad/example_board.bin
+ * (100 MHz, measured 2026-09-14) -- and one of those has to be at 0x800e7000
+ * for a quick run. The bitstream generated from *this* overlay has since been
+ * synthesized and measured PASS on the board (2026-09-25, see ../README.md);
+ * it still has to come back from a Quartus workstation on any other machine.
+ *
+ * `spi0` is the only controller this sample needs; SPI1 is left disabled.
+ * `agm,spi-multiline = <2>` declares the bitstream's quad capability so
+ * the driver will accept SPI_LINES_QUAD through the generic API; without
+ * it the driver returns -ENOTSUP (spi_agm_check_config()). The other half
+ * of the requirement is software: CONFIG_SPI_EXTENDED_MODES=y in
+ * prj.conf, without which the SPI_LINES_* bits never reach the driver.
+ */
+&spi0 {
+	status = "okay";
+	agm,spi-multiline = <2>;
+};
+
+/*
+ * SPI0 on the on-board flash, *through the fabric's full-duplex SPI IP*, the
+ * way the vendor's 200 MHz reference bitstream wires it
+ * (~/spi_full_mac_bitstream_200mhz/example_board.ve):
+ *
+ *   SPI0_WPN_IO2   PIN_98            the two IO pins straight to the flash
+ *   SPI0_HOLDN_IO3 PIN_95
+ *
+ *   SPI0_CSN    csn                  case C: the MCU's SPI0 pins are tapped
+ *   SPI0_SCK    sck                  into the IP's ports (names = the ports
+ *   SPI0_SI_IO0 si_io0:OUTPUT        of full_duplex_spi.v) ...
+ *   csn         PIN_96:OUTPUT        case B: ... and the IP drives the pins
+ *   sck         PIN_93:OUTPUT
+ *   si_io0      PIN_92:OUTPUT  # MOSI
+ *   so_io1      PIN_97:INPUT   # MISO
+ *   SPI0_SO_IO1 PIN_97               case A: SPI0's own MISO/IO0 read path
+ *   SPI0_SI_IO0 PIN_92:INPUT         ...
+ *
+ * That C+B shape is what makes the design a *full-duplex* SPI rather than the
+ * MCU's SPI0 pins wired straight out: the IP sits in the middle, which is also
+ * where the IO2/IO3 inputs come back into the engine. The RTL for it is a
+ * user file, and the sample ships it: ip/full_duplex_spi.v, *declared by
+ * name* in the sample's CMakeLists (AGM_LOGIC_IP = "full_duplex_spi", the
+ * shape the vendor's platformio.ini uses). The build resolves that to
+ * ip/<name>.v, stages it into <build>/logic and registers it in board.qsf
+ * (docs/CUSTOM-IP.md); -DAGM_USER_RTL=<path> overrides the lookup.
+ *
+ * The last two rows are the ones that put the flash back on SPI0's *own* RX
+ * path, and they are not optional (measured 2026-09-25, board `agrv2k_407`,
+ * bitstream built from this overlay with the IP): with the C+B rows alone the
+ * generated wrapper ties the MCU's read path to zero
+ * (`gpio0_io_in = {..., 1'b0, 1'b0}` instead of `{..., PIN_97_in, PIN_92_in}`),
+ * so 0x03 reads back 00 00 00 -- the IP can drive the pins, but the MCU cannot
+ * see the data. The reference VE carries exactly these two rows next to its
+ * C+B ones (SPI0_SI_IO0's with an explicit `:INPUT`, which is what
+ * agm,mcu-input-pins renders).
+ *
+ * The shared map in agrv2k-pins.dtsi targets the *header* pins instead
+ * (SI/SO/SCK/CSN = 2/4/98/5, HOLDN/WPN = 97/3) and wires them straight out,
+ * which is what the repository's own <build>/zephyr/board.bin carries.
+ *
+ * A devicetree overlay *replaces* a property, it does not extend it, so the
+ * whole mcu-functions/mcu-pins pair is restated here; the console UART, LEDs,
+ * buttons and the rest keep the shared board's wiring.
+ */
+&agrv2k_pins {
+	mcu-functions =
+		/* SPI0's two IO pins (the rest go through the IP below) */
+		"SPI0_WPN_IO2",
+		"SPI0_HOLDN_IO3",
+
+		/* Everything below is the shared board map, unchanged. */
+		"GPIO4_1",
+		"GPIO4_2",
+		"GPIO4_3",
+		"GPIO4_4",
+
+		"GPIO6_2",
+		"GPIO6_4",
+		"GPIO6_5",
+		"GPIO6_6",
+
+		"USB0_ID",
+
+		"UART0_UARTRXD",
+		"UART0_UARTTXD",
+		"UART1_UARTTXD",
+		"UART1_UARTRXD",
+
+		"CAN0_TX0",
+		"CAN0_RX0",
+
+		"I2C0_SDA",
+		"I2C0_SCL",
+
+		"GPTIMER1_CH0",
+
+		/* SPI0's own MISO and IO0: the IP drives those pins, but SPI0
+		 * still has to *read* them (0x03 needs IO1, dual/quad need IO0
+		 * as well) -- see the comment above. */
+		"SPI0_SO_IO1",
+		"SPI0_SI_IO0";
+
+	mcu-pins =
+		<98>, <95>,
+		<51>, <52>, <53>, <54>,
+		<23>, <24>, <29>, <30>,
+		<78>,
+		<69>, <68>, <67>, <66>,
+		<39>, <38>,
+		<36>, <35>,
+		<7>,
+		<97>, <92>;
+
+	/* SPI0_SI_IO0 is an output function, so its row needs the direction
+	 * spelled out to get the read-back path; SPI0_SO_IO1 is an input
+	 * function and needs no direction. */
+	agm,mcu-input-pins = <92>;
+
+	/* Case B: the IP drives/reads the flash pins. */
+	cpld-signals = "csn", "sck", "si_io0", "so_io1";
+	cpld-pins = <96>, <93>, <92>, <97>;
+	cpld-directions = "output", "output", "output", "input";
+
+	/* Case C: the MCU's SPI0 is tapped into those IP ports. */
+	mcu-cpld-functions = "SPI0_CSN", "SPI0_SCK", "SPI0_SI_IO0";
+	mcu-cpld-signals = "csn", "sck", "si_io0";
+	mcu-cpld-directions = "", "", "output";
+};
+
+&dma0 {
+	status = "okay";
+};

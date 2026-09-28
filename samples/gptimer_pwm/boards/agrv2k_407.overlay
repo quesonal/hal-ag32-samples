@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable GPTIMER0 PWM on agrv2k_407.
+ *
+ * Mutually exclusive with the tim0 counter driver — only one of
+ * `tim0` and `gpt0_pwm` may be enabled on the same instance.
+ *
+ * NOTE: physical pin output requires board.ve to route the
+ * GPTIMER0 OCx output to a L100 pin. The shipped example_board.bin
+ * does NOT route any PWM output, so the pin never toggles. The
+ * sample therefore verifies the driver at the register level
+ * (readback ARR/CCRx/CCER after pwm_set_cycles).
+ */
+&gpt0_pwm {
+    status = "okay";
+};

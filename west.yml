@@ -1,0 +1,75 @@
+# Copyright (c) 2026 AgRV Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# west.yml for the hal_ag32_samples repository.
+#
+# This repo is normally pulled into a workspace by hal_ag32 (the module's
+# manifest), so the typical workflow is `west init -m hal_ag32`. When this
+# repo is the workspace anchor instead, this manifest pulls in hal_ag32
+# and upstream Zephyr the same way hal_ag32's manifest does.
+
+manifest:
+  defaults:
+    remote: upstream-zephyr
+    remote-cache: cached-repos
+
+  remotes:
+    - name: upstream-zephyr
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr
+      revision: main
+      import:
+        # Keep this in sync with hal_ag32/west.yml so the two paths
+        # resolve to the same Zephyr SHA.
+        manifest-versions: true
+        name-allowlist:
+          - cmsis
+          - cmsis-dsp
+          - hal_ag32
+          - hal_stm32
+          - hal_espressif
+          - hal_nordic
+          - hal_nxp
+          - hal_atmel
+          - hal_renesas
+          - hal_infineon
+          - hal_microchip
+          - hal_openisa
+          - hal_silabs
+          - hal_adi
+          - hal_ti
+          - hal_wch
+          - hal_bouffalolab
+          - hal_alif
+          - net-tools
+          - canopennode
+          - libmetal
+          - lvgl
+          - mbedtls
+          - mipi-sys-t
+          - psa-crypto
+          - segger
+          - tinycrypt
+          - chre
+          - nrf_hw_models
+          - hostap
+          - src
+          - zephyr-co-prio
+          - nrf
+          - nuttx
+          - posix
+          - ...
+
+    # hal_ag32 (the Zephyr module this samples repo pairs with) must be on
+    # the manifest path so Zephyr sees drivers/boards/soc/dts/include and
+    # the build can resolve `MODULE_EXTRA_SOURCE_DIRS` references in
+    # sample CMakeLists.txt files.
+    - name: hal_ag32
+      url: https://github.com/quesonal/hal-ag32
+      revision: main
+      path: modules/hal_ag32
+
+  self:
+    path: hal_ag32_samples

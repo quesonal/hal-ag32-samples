@@ -1,0 +1,22 @@
+# Config options for the spi_flash_id sample application
+
+# Copyright (c) 2026 AgRV Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "AgRV2K SPI flash bring-up"
+
+config APP_SPI_LONG_XFER
+	bool "Also run the long (>4 byte) transfers through the engine's DMA path"
+	default y
+	help
+	  Read the flash's 64-bit unique ID (0x4B + four dummy bytes + eight ID
+	  bytes) twice and require the same answer: the reply is longer than the
+	  phase data register, so the driver drains it with RX DMA.
+
+	  Then probe the transmit side with a padded Write-Enable: 32 bytes
+	  (eight register-fed phases) and 36 bytes (past them, so the driver
+	  hands phase1 to the DMAC). Those two printouts are informational —
+	  this part leaves WEL clear when 0x06 is followed by filler bytes — the
+	  sample README explains what the verdict actually is.
+
+source "Kconfig.zephyr"

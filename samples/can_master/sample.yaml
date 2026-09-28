@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for can_master. Build-only: the test runs the
+# master side of a multi-frame handshake against an external CAN
+# 2.0B slave node, so it cannot run under twister without an attached
+# peer + transceiver.
+sample:
+  name: can_master
+  description: CAN0 NORMAL-mode master — PING/START/DATA/STOP handshake vs an external peer
+tests:
+  sample.can_master.agm_agrv2k_407:
+    build_only: true
+    # Driver-level two-node CAN IS validated (2026-09-12, §3.18). This
+    # sample's own PING/START/DATA/STOP handshake against a real slave peer
+    # has not been run yet, so `skip` stays.
+    skip: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - can

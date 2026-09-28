@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for can_loopback. Build-only: the test runs in
+# MOD_SELFTEST (loopback) mode so it does not need an external CAN
+# peer, but it still requires hardware to verify the on-die SJA1000
+# IP is alive (the loopback is internal to the controller).
+sample:
+  name: can_loopback
+  description: CAN0 MOD_SELFTEST loopback — one-frame TX/RX round-trip via the SJA1000 IP
+tests:
+  sample.can_loopback.agm_agrv2k_407:
+    build_only: true
+    # Two-node bus interop IS validated (2026-09-12, §3.18), but this
+    # VALIDATED on hardware 2026-09-12 (3/3 resets): MOD.STM self-test,
+    # TX completes via IR.TI and the frame self-receives -> PASS. Still
+    # `skip` because twister has no agrv2k_407 dev board to run it on.
+    skip: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - can

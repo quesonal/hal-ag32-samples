@@ -1,0 +1,124 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Default layout: A/B entirely inside the on-die flash, no external NOR.
+ *
+ * The loader, the boot record, both image sides, the application slot and the
+ * bitstream staging all live in the 1 MiB the SoC has anyway, so the loader
+ * never touches the SPI NOR -- a board without one works, and a fabric
+ * bitstream that does not route SPI0 back to the engine is not a failure mode
+ * any more (the port record (peripherals) 3.26.7).
+ *
+ * The sizes are the whole configuration: `loader-size` and `app-size` (a
+ * binding default of 200 KiB). The driver derives the offsets from them, and
+ * the rest is fixed by the SoC (agm_bitstream.h) -- the fabric A/B slots, the
+ * bitstream record and the factory region all sit at the same addresses in
+ * whichever family the board uses:
+ *
+ *   0x000000  loader               96 KiB   (loader-size)
+ *   0x018000  side A              200 KiB   (app-size)
+ *   0x04a000  side B              200 KiB   (app-size)
+ *   0x07c000  application slot    200 KiB   (app-size; runs at 0x8007c000)
+ *   0x0ae000  app boot record       8 KiB   (two erase sectors, two copies)
+ *   0x0b0000  bind-salt sector      4 KiB   (derived: right after the record)
+ *   0x0b1000  free                 12 KiB   (app-size can grow into it)
+ *   0x0b4000  fabric slot 1       100 KiB   (derived from the factory anchor)
+ *   0x0cd000  fabric slot 2       100 KiB   (derived)
+ *   0x0e6000  fabric A/B record     4 KiB   (derived)
+ *   0x0e7000  factory fabric      100 KiB   (the option byte's target)
+ *
+ * Every position is derived: the app chain packs up from 0 (loader, A, B,
+ * the application slot, then the 12 KiB metadata block: boot record + salt),
+ * the fabric area packs down from the factory anchor (Config
+ * AGM_BITSTREAM_FACTORY_ADDR / _SLOT_SIZE in drivers/misc/Kconfig.agm), and
+ * the build asserts where the two meet -- raise `app-size` and the assertion
+ * is what tells you when it no longer fits (12 KiB of headroom today). The
+ * full picture, the two layout families and who writes what:
+ * docs/FLASH-LAYOUT.md.
+ *
+ * 96 KiB for the loader is deliberate: the signed loader is 72768 B
+ * (measured 2026-09-18) plus the 604 B of trial-watchdog driver, so the
+ * layout that used to be unable to hold either now holds both.
+ *
+ * The two-flash variant lives in boards/agrv2k_407_ext_nor.overlay.
+ */
+
+/*
+ * The loader's own region. Pointing `/chosen/zephyr,flash` at a *partition* is
+ * what gives the RISC-V linker its ROM base and size (CONFIG_FLASH_BASE_ADDRESS
+ * / CONFIG_FLASH_SIZE, see include/zephyr/arch/riscv/common/linker.ld), so a
+ * loader that grows past its region fails the build instead of running into
+ * the boot record -- measured 2026-09-18: the signed loader (72768 B) silently
+ * grew into the record, and both the build and the flash write reported
+ * success (the port record (peripherals) 3.26.27).
+ *
+ * Keep this in step with `loader-size` in the boot node below.
+ */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		loader_region: partition@80000000 {
+			label = "boot_loader";
+			reg = <0x80000000 0x18000>;
+		};
+	};
+};
+
+/ {
+	chosen {
+		zephyr,flash = &loader_region;
+	};
+};
+
+/*
+ * The layout (the binding's "on-die" family: `store-flash` and
+ * `on-die-flash` are the same node, so the driver derives the offsets).
+ */
+/ {
+	boot: boot {
+		compatible = "agm,agrv2k-boot";
+		status = "okay";
+
+		store-flash = <&flash0>;
+		on-die-flash = <&flash0>;
+
+		/* How big the application may get. Both sides and the
+		 * execution slot are sized for it; 200 KiB is the default, so
+		 * this line is the knob to turn when an image outgrows it. */
+		app-size = <0x32000>;
+		/* Everything below the boot record belongs to the loader. */
+		loader-size = <0x18000>;
+
+		bitstream-address = <0x800e7000>;
+		bitstream-size = <0x00019000>;
+	};
+};
+
+/*
+ * The backup-domain watchdog the loader arms before a trial boot: the IWDG is
+ * the only reset source that also runs in standby, so the dtsi leaves it
+ * disabled and each user has to ask for it.
+ */
+&iwdg0 {
+	status = "okay";
+};
+
+/*
+ * The CRC unit, for the slot/record CRCs the loader computes on every boot.
+ * Enabling the node is not enough: Zephyr's CRC hardware handler keys off the
+ * `zephyr,crc` chosen node (subsys/crc/Kconfig), and with one present it
+ * replaces the weak software crc32_ieee() with the driver-backed one --
+ * measured on this board: the 99944 B fabric CRC drops from ~67 ms to ~3.5 ms.
+ * soc.c opens the unit's AHB clock gate before the fabric verifier runs.
+ */
+&crc0 {
+	status = "okay";
+};
+
+/ {
+	chosen {
+		zephyr,crc = &crc0;
+	};
+};

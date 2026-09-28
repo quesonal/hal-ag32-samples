@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_full_duplex
+  description: |
+    AgRV2K CPLD-assisted full-duplex SPI: the on-die phase engine clocks
+    the transfer while the fabric captures MISO into the window data
+    register. Needs a bitstream carrying the vendor full_duplex_spi.v
+    patch, so the case is build_only.
+tests:
+  sample.spi_full_duplex.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # MOSI->MISO jumper variant (loopback instead of a bus device).
+  sample.spi_full_duplex.loopback.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_APP_SPI_FULL_LOOPBACK=y
+    platform_allow:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

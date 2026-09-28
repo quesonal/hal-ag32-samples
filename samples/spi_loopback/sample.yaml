@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_loopback
+  description: |
+    MOSI->MISO loopback through the fabric capture: shows what the AgRV2K SPI
+    engine actually transmits (4 B and 32 B through the driver, 36 B through
+    its unusable TX-DMA path). Needs a bitstream with the full-duplex patch
+    and a MOSI->MISO connection, so the case is build_only.
+tests:
+  sample.spi_loopback.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

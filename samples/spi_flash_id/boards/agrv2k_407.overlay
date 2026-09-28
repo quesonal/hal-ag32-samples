@@ -1,0 +1,25 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Both controllers are claimed here: which one actually reaches the SPI
+ * NOR is a bitstream property, not a driver one. The vendor eval board's
+ * stock bitstream routes SPI0, other boards route SPI1 (their SPI flash
+ * sits on different pins -- measured on the dev board board: flash SI/CLK/
+ * HOLD#/CS#/SO/WP# on PIN_92/93/95/96/97/98), and the sample probes every
+ * enabled controller and prints what each one sees.
+ *
+ * The pins are handed to the SPI IP by the pinctrl states (spi0_default /
+ * spi1_default); the APB gates are opened by soc.c from the same nodes.
+ */
+&spi0 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+};
+
+/* The engine's DMA path (transfers longer than four bytes) needs the DMA
+ * controller; the channel/request numbers come from the SPI nodes. */
+&dma0 {
+	status = "okay";
+};

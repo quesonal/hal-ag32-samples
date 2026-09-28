@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_flash_id
+  description: |
+    Read the on-board SPI NOR flash (RDID / RDSR / a few data bytes)
+    through the AgRV2K phase-engine SPI driver. Needs the board's
+    bitstream to route SPI0, so the case is build_only.
+tests:
+  sample.spi_flash_id.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

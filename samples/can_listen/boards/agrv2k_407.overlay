@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable CAN0 on agrv2k_407 for can_listen. The sample never requests
+ * TX and never ACKs, so only the RX0 pin (PIN_38) and the SJA1000 RX
+ * path matter. 125 kbps matches the eval-board default and the ESP32-C3
+ * peer in $HOME/esp32c3-can.
+ */
+&can0 {
+	status = "okay";
+	bitrate = <125000>;
+};

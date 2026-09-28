@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_flash_rw
+  description: |
+    Erase a sector of the SPI NOR and program 4, 64 and 256-byte pages
+    through the AgRV2K SPI driver, then read them back. Exercises the
+    register-fed TX path and the engine's TX DMA, and needs a bitstream
+    that routes a controller to the flash pins, so the case is build_only.
+tests:
+  sample.spi_flash_rw.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+
+  # Device-testing (HIL) variant: builds, flashes and runs on the dev board, and
+  # greps the sample's own final verdict. This is the case that would have
+  # caught the AHB-gate regression on its own: the page read-backs go through
+  # the SPI engine's RX DMA, which is behind DMAC0.
+  #
+  # It is *destructive to the on-board NOR*: the sample erases and reprograms
+  # sector 0 (0x000000..0x000fff) of the SPI flash the bitstream routes to.
+  # Run it on a dev board board, not on anything holding data you care about.
+  #
+  #   AGM_BITSTREAM_BIN=<canonical bitstream> west twister \
+  #       -T modules/hal_ag32/samples -p agrv2k_407 --device-testing \
+  #       --device-serial /dev/ttyACM0 --west-flash \
+  #       -s sample.spi_flash_rw.hil.agm_agrv2k_407
+  sample.spi_flash_rw.hil.agm_agrv2k_407:
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "spi_flash_rw: PASS"
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - hil
+      - hal_ag32

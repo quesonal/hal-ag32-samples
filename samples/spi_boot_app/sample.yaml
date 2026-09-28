@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_boot_app
+  description: |
+    Payload for samples/spi_boot_loader: linked XIP into the loader's on-die
+    application slot (the legacy RAM-linked variant went away with `mode
+    external`). Needs the loader's bitstream/board setup (canonical 200 MHz
+    bitstream routes the on-board flash to SPI0), so the cases are build_only.
+tests:
+  sample.spi_boot_app.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # The same payload as the *signed* flow needs it (CONFIG_BOOT_AGM_SIG_*):
+  # linked one MCUboot header past the slot base, because the loader hands a
+  # container's payload to `slot + hdr_size` and the header occupies that gap
+  # (imgtool's --pin-header; sign_image.py fills the same gap). The dev board proved
+  # the flow with an ad-hoc -D first (peripherals 3.26.32) -- this is the
+  # regression net for the layout, and the only scenario whose address differs.
+  sample.spi_boot_app.internal_signed.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_ROM_START_OFFSET=0x20
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

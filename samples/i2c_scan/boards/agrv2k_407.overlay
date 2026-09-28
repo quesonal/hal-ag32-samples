@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable I2C0 on agrv2k_407.
+ *
+ * The FPGA bitstream routes I2C0 SDA -> PIN_36 / SCL -> PIN_35
+ * (board.ve). The i2c_agm driver enables the APB clocks and sets the
+ * GPIO3 AFSEL bits itself at init.
+ */
+&i2c0 {
+	status = "okay";
+};

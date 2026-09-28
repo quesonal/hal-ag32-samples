@@ -1,0 +1,147 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Sample-local Kconfig for the iperf2 TCP throughput test.
+# Network-stack options (zperf, ETH drivers, buffers, IP) live in
+# prj.conf; this file only owns the knobs the user is expected to
+# touch when running the test.
+#
+# `source "Kconfig.zephyr"` pulls in all the standard networking /
+# driver / OS symbols so that prj.conf's CONFIG_NET_* / CONFIG_NET_ZPERF_*
+# references resolve at parse time. Without this line, every symbol
+# in prj.conf becomes an "undefined symbol" warning and Kconfig
+# aborts. (Same trick as samples/fcb_hotswap/Kconfig.)
+
+source "Kconfig.zephyr"
+
+menuconfig LAN8720_IPERF
+	bool "lan8720_iperf sample"
+	default y
+	help
+	  Enable the iperf2 TCP throughput client sample on the
+	  AgRV2K on-die MAC0 + LAN8720 RMII PHY.
+
+if LAN8720_IPERF
+
+config LAN8720_IPERF_SERVER_IP
+	string "iperf2 server IPv4 address"
+	default "192.168.15.100"
+	help
+	  IPv4 address of the iperf2 server (PC). Must be in the same
+	  /24 subnet as the board's CONFIG_NET_CONFIG_MY_IPV4_ADDR.
+
+config LAN8720_IPERF_SERVER_PORT
+	int "iperf2 server TCP port"
+	default 5001
+	range 1 65535
+	help
+	  TCP port the iperf2 server listens on. iperf2 default is 5001.
+
+choice LAN8720_IPERF_PROTO
+	prompt "Upload protocol"
+	default LAN8720_IPERF_PROTO_TCP
+	help
+	  Both variants talk to iperf2 on the PC: TCP to `iperf -s`, UDP to
+	  `iperf -s -u` (same default port 5001).
+
+config LAN8720_IPERF_PROTO_TCP
+	bool "TCP (iperf -s)"
+	help
+	  ACK-clocked bulk transfer. Measures end-to-end TCP goodput; the
+	  rate is set by the round trip and window, not by us.
+
+config LAN8720_IPERF_PROTO_UDP
+	bool "UDP (iperf -s -u)"
+	help
+	  Rate-paced UDP with no ACK clocking, so the sender is limited only
+	  by the driver, the stack and the wire. This is the variant that
+	  answers "how fast can the MAC actually push data". The iperf2
+	  server sends back a report (received bytes, loss, jitter) which
+	  zperf decodes into the result.
+
+config LAN8720_IPERF_PROTO_RAW
+	bool "RAW L2 -- dev board-only MAC ceiling probe (no iperf server)"
+	select NET_ZPERF_RAW_TX
+	select NET_SOCKETS_PACKET
+	help
+	  Build the frame by hand and hand it straight to the driver
+	  (NET_AF_PACKET/NET_SOCK_RAW), with no IP, UDP or TCP above it.
+	  NOT iperf-compatible: there is no server side and no report.
+
+	  This exists to answer one question -- is the iperf2 number
+	  limited by the board or by the upstream network stack? Capture on
+	  the PC with `tcpdump -i <if> ether proto <ethertype>`; the host
+	  kernel drops the frames because the ethertype is unassigned.
+
+endchoice
+
+config LAN8720_IPERF_RAW_ETHERTYPE
+	hex "RAW mode ethertype"
+	depends on LAN8720_IPERF_PROTO_RAW
+	default 0x88b5
+	help
+	  0x88B5 is "Local Experimental Ethertype 1" -- nothing on the host
+	  claims it, so the frames are counted by tcpdump and then dropped.
+
+config LAN8720_IPERF_RAW_RATE_KBPS
+	int "RAW target rate (kbit/s)"
+	depends on LAN8720_IPERF_PROTO_RAW
+	default 1000000
+	range 1 10000000
+	help
+	  Same units as the UDP knob (x1024 bit/s) and, like it, must be
+	  non-zero. The default is far above the 100 Mb PHY, so the pacing
+	  is a no-op and the run is a pure max-throughput probe.
+
+config LAN8720_IPERF_RAW_PACKET_SIZE
+	int "RAW frame size (bytes, header + payload)"
+	depends on LAN8720_IPERF_PROTO_RAW
+	default 1502
+	range 60 1514
+	help
+	  Total on-the-wire frame size: 14 B Ethernet header + payload,
+	  without FCS. The default 1502 matches what the UDP mode puts on
+	  the wire (1460 B payload + 40 B zperf header + 8 UDP + 20 IP +
+	  14 Ethernet), so the two modes can be compared directly.
+
+config LAN8720_IPERF_UDP_RATE_KBPS
+	int "UDP target rate (kbit/s)"
+	depends on LAN8720_IPERF_PROTO_UDP
+	default 100000
+	range 1 1000000
+	help
+	  Target send rate in zperf/iperf2 units (x1024 bit/s). The uploader
+	  paces packets to this rate. The default 100000 = 102.4 Mbit/s is
+	  deliberately above the 100 Mb PHY, so the pacing never becomes the
+	  limit and the run shows what the board can really push. Must be
+	  non-zero: zperf divides by it.
+
+config LAN8720_IPERF_DURATION_MS
+	int "Upload duration (ms)"
+	default 10000
+	range 100 600000
+	help
+	  How long the client streams data to the server. 10 s is
+	  typical; longer gives a more stable throughput number.
+
+config LAN8720_IPERF_PACKET_SIZE
+	int "TCP segment size (bytes)"
+	default 1460
+	range 64 9000
+	help
+	  Payload size per TCP segment. 1460 = MTU 1500 - 20 IP - 20 TCP;
+	  avoids IP fragmentation and maximises throughput.
+
+	  Must be <= CONFIG_NET_ZPERF_MAX_PACKET_SIZE (1460 in this
+	  sample's prj.conf), otherwise zperf silently clamps it at
+	  runtime. main.c has a BUILD_ASSERT so a mismatched pair fails
+	  the build instead.
+
+config LAN8720_IPERF_MIN_MBITPS
+	int "Minimum throughput for PASS (Mbit/s)"
+	default 1
+	range 0 1000
+	help
+	  If measured throughput falls below this, the sample logs FAIL.
+	  Set to 0 to disable the threshold check.
+
+endif # LAN8720_IPERF

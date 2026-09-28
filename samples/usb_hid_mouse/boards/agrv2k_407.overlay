@@ -1,0 +1,26 @@
+/*
+ * Copyright (c) 2026 AgRV Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * Enable one USB HID mouse device on USB0 (udc_agm).
+ *
+ * The `zephyr,hid-device` node instantiates the usbd_hid class
+ * (subsys/usb/device_next/class/usbd_hid.c): one HID interface with an
+ * interrupt IN endpoint (EP1 IN, 0x81), full-speed, mouse protocol.
+ *
+ * in-report-size = 64 makes the FS interrupt endpoint MPS 64 B (same as
+ * the upstream hid-mouse sample); the 4-byte mouse reports are sent as
+ * short packets. in-polling-period-us = 10000 → bInterval = 10 ms.
+ */
+
+/ {
+	hid_dev_0: hid_dev_0 {
+		compatible = "zephyr,hid-device";
+		label = "AgRV2K USB HID Mouse";
+		protocol-code = "none";
+		in-report-size = <64>;
+		in-polling-period-us = <10000>;
+	};
+};

@@ -1,0 +1,57 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * usb_msc_dfu_boot -- the USB MSC upload channel for spi_boot_loader's DFU.
+ *
+ * Two things are configured here:
+ *
+ *   1. The link address: this image runs from the loader's on-die
+ *      application slot, exactly like samples/spi_boot_app. Pointing
+ *      /chosen/zephyr,flash at the slot partition is what moves the RISC-V
+ *      link address (0x8007c000 with the default layout); the loader writes
+ *      the image into that slot and jumps to it.
+ *
+ *   2. The boot layout: the boot driver derives every store/record offset
+ *      from the boot node, so this sample has to describe the *same* layout
+ *      the loader owns (samples/spi_boot_loader/boards/agrv2k_407.overlay).
+ *      It uses agm_boot_upload_* on the store the loader's record does not
+ *      point at, then the loader boots what it published.
+ */
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		slot_internal: partition@8007c000 {
+			label = "slot_internal";
+			reg = <0x8007c000 0x32000>;
+		};
+	};
+};
+
+/ {
+	chosen {
+		zephyr,flash = &slot_internal;
+		zephyr,code-partition = &slot_internal;
+	};
+};
+
+/* The loader's layout: on-die A/B (store-flash == on-die-flash), loader
+ * 96 KiB, app-size 200 KiB. Keep these numbers in step with
+ * samples/spi_boot_loader/boards/agrv2k_407.overlay. */
+/ {
+	boot: boot {
+		compatible = "agm,agrv2k-boot";
+		status = "okay";
+
+		store-flash = <&flash0>;
+		on-die-flash = <&flash0>;
+
+		app-size = <0x32000>;
+		loader-size = <0x18000>;
+
+		bitstream-address = <0x800e7000>;
+		bitstream-size = <0x00019000>;
+	};
+};

@@ -1,0 +1,27 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * user_ip — the only thing this sample needs from the board is the fabric
+ * window itself.
+ *
+ * cpld0 (0x60000000 + 0x8000 in the SoC dtsi) is disabled by default because
+ * a bitstream without a `mem_ahb` slave stalls the CPU on the first access;
+ * enabling it is what samples/cpld_reg does too. The *register map* of the
+ * user logic is deliberately not here: it lives in src/user_ip_regs.h, next
+ * to (or generated from) the RTL, because it changes with the bitstream and
+ * devicetree cannot express bitfields (see that header's comment).
+ *
+ * A pin the fabric drives as an interrupt *is* a board fact and would belong
+ * here, on the GPIO node the MCU sees it on -- the fabric has no line to the
+ * PLIC, so CPLD -> pin -> GPIO bank is the only path today:
+ *
+ *	&gpio6 {
+ *		status = "okay";
+ *	};
+ *
+ * with the application installing a handler on that line (gpio_pin_interrupt
+ * _configure + a callback).
+ */
+
+&cpld0 {
+	status = "okay";
+};

@@ -1,0 +1,28 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable GPTIMER1 PWM on agrv2k_407.
+ *
+ * The shipped example_board.ve routes GPTIMER1_CH0 to PIN_7:
+ *
+ *   GPTIMER1_CH0 PIN_7
+ *
+ * which is the ONLY physical-pin routing for any GPTIMER OCx
+ * output in the shipped bitstream. There is no GPTIMER0_CHx ->
+ * PIN_xx line, so the gpt0_pwm path is pin-less on this
+ * bitstream (the gptimer_pwm / gptimer_pwm_blinky samples
+ * verify the driver at the register level only).
+ *
+ * This sample uses gpt1_pwm so the OC0 path actually drives
+ * a real L100 pin. Verify the waveform on PIN_7 with a scope
+ * or logic analyzer:
+ *   - 1 kHz (default) at 50% duty
+ *   - toggles between 0V and 3.3V (CMOS levels)
+ *   - period: 1 ms; high time: 500 us
+ *
+ * Mutually exclusive with &gpt1 (the GPTIMER1 counter driver
+ * on the same instance) — only one of &gpt1 / &gpt1_pwm may
+ * be status="okay" at a time.
+ */
+&gpt1_pwm {
+    status = "okay";
+};

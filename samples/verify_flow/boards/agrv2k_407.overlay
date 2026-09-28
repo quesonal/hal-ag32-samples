@@ -1,0 +1,52 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Same layout as the loader (samples/spi_boot_loader/boards/agrv2k_407.overlay)
+ * -- it has to be, because this image is linked into that slot and reads the
+ * same boot node back. The signed build adds CONFIG_ROM_START_OFFSET=0x20 so
+ * the image starts one MCUboot header past the slot base (see sample.yaml).
+ */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		slot_internal: partition@8007c000 {
+			label = "slot_internal";
+			reg = <0x8007c000 0x32000>;
+		};
+	};
+};
+
+/ {
+	chosen {
+		/* Pointing zephyr,flash at the slot is what moves the link
+		 * address on this architecture (port record 3.26.11). */
+		zephyr,flash = &slot_internal;
+		zephyr,code-partition = &slot_internal;
+	};
+
+	boot: boot {
+		compatible = "agm,agrv2k-boot";
+		status = "okay";
+
+		store-flash = <&flash0>;
+		on-die-flash = <&flash0>;
+
+		app-size = <0x32000>;
+		loader-size = <0x18000>;
+
+		bitstream-address = <0x800e7000>;
+		bitstream-size = <0x00019000>;
+	};
+};
+
+&crc0 {
+	status = "okay";
+};
+
+/ {
+	chosen {
+		zephyr,crc = &crc0;
+	};
+};

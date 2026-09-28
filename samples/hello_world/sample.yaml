@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for the hal_ag32 hello_world sample.
+#
+# The sample is the AgRV2K smoke test: console banner + LED toggle +
+# button interrupt. It is runnable on agrv2k_407 only at MVP; the
+# sample does not depend on any other board.
+
+sample:
+  name: hello_world
+  description: Console banner + LED toggle + GPIO interrupt on agrv2k_407
+tests:
+  sample.hello_world.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+
+  # Device-testing (HIL) canary: the cheapest "board + console + bitstream"
+  # check there is. If this one fails, nothing else on the dev board will say
+  # anything useful either -- start here. See docs/SAMPLE-WORKFLOW.md 2.1.
+  sample.hello_world.hil.agm_agrv2k_407:
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "\\*\\*\\* Booting Zephyr OS"
+    timeout: 60
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - hil
+      - hal_ag32

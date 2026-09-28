@@ -1,0 +1,23 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Both controllers are claimed here: which one reaches the SPI NOR is a
+ * bitstream property, not a driver one, and the sample takes the first one
+ * that answers RDID.
+ *
+ * The pins come from the pinctrl states (spi0_default / spi1_default) and
+ * the APB gates are opened by soc.c from the same nodes.
+ */
+&spi0 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+};
+
+/* The DMA controller drives the engine's PHASE_DATA port for long frames
+ * and drains it for long reads; the channel/request numbers come from the
+ * SPI nodes. */
+&dma0 {
+	status = "okay";
+};

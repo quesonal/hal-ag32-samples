@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: fcb_hotswap
+  description: |
+    Runtime (hot) fabric reload: validate a spare bitstream in FLASH, move the
+    CPU onto the on-die HSI clock, run the FCB DEACTIVATE/AUTO/ACTIVATE
+    sequence, hand the clock tree to the new fabric and re-assert the pin
+    routes — all without a reboot. The SPI NOR RDID probe changes with the
+    fabric while k_uptime keeps counting, which is the evidence. Requires two
+    same-class bitstreams in FLASH (see README.md).
+tests:
+  sample.fcb_hotswap.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

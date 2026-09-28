@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: dual_ip
+  description: |
+    Two fabric IPs in one bitstream: the vendor's custom_ip AHB RAM block and
+    the full-duplex SPI IP, behind one wrapper (the fabric has a single IP
+    slot, so the IP gen_vlog instantiates with -m is that wrapper -- see
+    docs/CUSTOM-IP.md 1.5). The sample checks the RAM block through the cpld0
+    window, then repeats samples/spi_quad_read's four flash reads to show the
+    SPI IP still works with a second IP in the same fabric.
+    Needs a bitstream synthesized from this sample's own logic/ directory, so
+    the case is
+    build_only.
+tests:
+  sample.dual_ip.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

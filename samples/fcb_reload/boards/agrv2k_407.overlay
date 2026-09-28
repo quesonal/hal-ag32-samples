@@ -1,0 +1,54 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * fcb_reload — 100 MHz SYSCLK overlay.
+ *
+ * The SPI bitstreams at $HOME/spi_full_bitstream/ and
+ * $HOME/spi_full_bitstream_without_flash/ are 100 MHz bitstreams
+ * (vendor VE declares SYSCLK 100 / BUSCLK 100 / HSECLK 8). The default
+ * agrv2k_407 dts assumes the 200 MHz vendor example_board.bin — running
+ * fcb_reload against a 100 MHz bitstream at the default 200 MHz means
+ * UART 115200 baud is wrong and the kernel tick drifts.
+ *
+ * Per the port record (peripherals) (clock tree note): cpu0 ::
+ * clock-frequency must stay a literal — sys_clock ticks are computed
+ * from it as an integer. &sys clock-frequency follows the same path
+ * via DT_PROP. flash-max-frequency = BUSCLK.
+ *
+ * Use this overlay only for the fcb_reload sample (and any dev board that
+ * intentionally targets a 100 MHz bitstream). The hello / IWDG /
+ * SPI quad / pm_gate_audit dev boards keep the default 200 MHz.
+ *
+ * One number, four consumers (firmware clk0/cpu0 + the pin map the
+ * bitstream is rendered from): generate_board_ve.py fails if the pin map
+ * and &clk0/&cpu0 disagree, which is how this overlay's original
+ * 100-vs-200 split was caught (2026-09-15).
+ */
+#define AGM_BENCH_SYSCLK_HZ 100000000
+
+&clk0 {
+	clock-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+&cpu0 {
+	clock-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+&agrv2k_pins {
+	sysclk-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+&spi0 {
+	status = "okay";
+};
+
+/* Which controller reaches the flash is a bitstream property, so probe
+ * both: <build_dir>/zephyr/board.bin routes SPI1 to the flash, while the
+ * spi_full_bitstream family puts it behind SPI0's fabric patch. Reading
+ * the RDID off the wrong one returns zeros, not a failure. */
+&spi1 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};

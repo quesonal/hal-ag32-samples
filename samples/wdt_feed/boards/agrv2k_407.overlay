@@ -1,0 +1,9 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable WDOG0 (wdt0) on agrv2k_407. The wdt_agm driver enables the
+ * unit APB clock gate itself at init; a single timeout channel is
+ * exposed.
+ */
+&wdt0 {
+	status = "okay";
+};

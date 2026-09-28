@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for can_pin_drive. Build-only: the sample needs a
+# PIN_39 <-> PIN_38 jumper (and/or a scope on the transceiver wires) to
+# produce meaningful output, so it is not runnable under twister.
+sample:
+  name: can_pin_drive
+  description: Raw-GPIO 1 kHz square wave on CAN0_TX0/PIN_39, self-checked by counting edges on CAN0_RX0/PIN_38
+tests:
+  sample.can_pin_drive.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - gpio
+      - can

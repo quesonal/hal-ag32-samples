@@ -1,0 +1,124 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * slave_spi sample — FPGA bitstream pin overrides.
+ *
+ * The slave_spi example wires the on-die SPI0/SPI1 master pair
+ * directly to two user-logic slave SPIs (sspi0/sspi1) on the same
+ * pins. This overlay rewrites the shared `agm,agrv2k-pins` node's pin
+ * lists into the master + slave set this sample needs, and drops
+ * SYSCLK from 200 MHz to 100 MHz so the bitstream runs slower for
+ * cheap logic simulation.
+ *
+ * Three kinds of overrides land here:
+ *
+ *   1. sysclk-frequency — 200 MHz (board default) → 100 MHz. Matches
+ *      slave_spi/top.ve line 1.
+ *
+ *   2. mcu-functions / mcu-pins (case A, MCU peripheral → pin).
+ *      A dts overlay REPLACES a whole array property, it does not
+ *      append: the merged node keeps only the 8 rows below, and the
+ *      shared dtsi's SPI0_* / UART0/1 / CAN0 / LED / GPTIMER rows are
+ *      not in the rendered board.ve at all (measured 2026-09-12; see
+ *      the board.ve notes §4). That is intended here — this
+ *      sample wants the bitstream's pin map to be exactly master
+ *      SPI0/SPI1 plus the slave signals below.
+ *
+ *      Same pin in both `mcu-functions` (master) and `cpld-signals`
+ *      (slave) is deliberate: the bitstream joins the two in its
+ *      internal cross-bar. generate_board_ve.py reports that as a
+ *      `note:` — it only errors when one pin is claimed twice
+ *      *within* the same array.
+ *
+ *   3. cpld-signals / cpld-pins / cpld-directions (case B, CPLD
+ *      custom signal → pin with direction). sspi0_* / sspi1_* are
+ *      the user-logic slave SPI signal names; their pin list
+ *      mirrors the SPI0_* / SPI1_* arrays above (same pins,
+ *      different roles).
+ *
+ * generate_board_ve.py then walks the merged node and emits
+ * <board_dir>/board.ve with case A (master SPI), case B (slave SPI),
+ * and case C (empty) sections in order.
+ */
+
+/* Drop SYSCLK from 200 MHz → 100 MHz for slow-clock testing. The firmware
+ * clocks (&clk0 / &cpu0) and the pin map (what board.ve is rendered from)
+ * must state the same rate — generate_board_ve.py fails otherwise, which is
+ * how this overlay's original pin-map-only override was caught
+ * (2026-09-15). */
+#define AGM_BENCH_SYSCLK_HZ 100000000
+
+&clk0 {
+	clock-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+&cpu0 {
+	clock-frequency = <AGM_BENCH_SYSCLK_HZ>;
+};
+
+&agrv2k_pins {
+	sysclk-frequency = <AGM_BENCH_SYSCLK_HZ>;
+
+	/* Replace the shared case A pin list with master SPI0 + SPI1.
+	 * A dts overlay replaces the whole property, so the dtsi's
+	 * UART / CAN / LED rows are deliberately not in this bitstream
+	 * (see the file header).
+	 */
+	mcu-functions =
+		"SPI0_CSN",
+		"SPI0_SCK",
+		"SPI0_SI_IO0",
+		"SPI0_SO_IO1",
+		"SPI1_CSN",
+		"SPI1_SCK",
+		"SPI1_SI_IO0",
+		"SPI1_SO_IO1";
+	mcu-pins =
+		<1>, <15>, <17>, <25>,
+		<29>, <46>, <48>, <52>;
+
+	/* Slave SPIs are CPLD signals — case B with direction. sspi0_*
+	 * are inputs (master→slave), sspi0_miso / sspi1_miso are
+	 * outputs (slave→master).
+	 */
+	cpld-signals =
+		"sspi0_csn",
+		"sspi0_sck",
+		"sspi0_mosi",
+		"sspi0_miso",
+		"sspi1_csn",
+		"sspi1_sck",
+		"sspi1_mosi",
+		"sspi1_miso";
+	cpld-pins =
+		<1>, <15>, <17>, <25>,
+		<29>, <46>, <48>, <52>;
+	cpld-directions =
+		"input",
+		"input",
+		"input",
+		"output",
+		"input",
+		"input",
+		"input",
+		"output";
+};
+
+/* Enable DMAC0 — the test firmware drives sspi0/sspi1 via dma_agm
+ * for the DMA-mode sub-test.
+ */
+&dma0 {
+	status = "okay";
+};
+
+/* The agm,pins cells (function -> GPIO bank/bit -> dir) are generated:
+ * tools/generate_pinctrl_dtsi.py turns this file's mcu-functions list plus
+ * the SoC AF table (tools/agm_af_pins.yaml) into that fragment. Do not
+ * hand-write them here -- tools/check_pinctrl.py fails if the effective
+ * state and the pin list disagree.
+ *
+ * This sample needs its own fragment rather than the board default: its pin
+ * list drops SPI0_WPN_IO2/SPI0_HOLDN_IO3 (and SPI1's equivalents), so the
+ * board default fragment would AFSEL two extra pins per SPI that *this*
+ * bitstream does not route. See the pin-routing notes 12.12.
+ */
+#include <agm/pinctrl-slavespi.dtsi>

@@ -1,0 +1,92 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * dual_ip pin map: the flash wiring of samples/spi_quad_read *plus* the
+ * fabric window the wrapper (ip/dual_ip.v) splits between the two IPs.
+ *
+ * SPI0 goes through the full-duplex SPI IP exactly as it does there --
+ * case A for the two IO pins and the MCU read-back, case C to tap the MCU's
+ * SPI0 into the IP, case B for the IP to drive the pins. The only addition
+ * is cpld0: the RAM block of the second IP is reached through the fabric
+ * window at 0x60000000+0x000..0xFFF (see src/ram_window.c).
+ */
+
+/* `agm,spi-multiline = <2>` declares the bitstream's quad capability so the
+ * driver accepts SPI_LINES_QUAD through the generic API; without it
+ * spi_agm_check_config() returns -ENOTSUP. */
+&spi0 {
+	status = "okay";
+	agm,spi-multiline = <2>;
+};
+
+&cpld0 {
+	status = "okay";
+};
+
+&agrv2k_pins {
+	mcu-functions =
+		/* SPI0's two IO pins (the rest go through the IP below) */
+		"SPI0_WPN_IO2",
+		"SPI0_HOLDN_IO3",
+
+		/* Everything below is the shared board map, unchanged. */
+		"GPIO4_1",
+		"GPIO4_2",
+		"GPIO4_3",
+		"GPIO4_4",
+
+		"GPIO6_2",
+		"GPIO6_4",
+		"GPIO6_5",
+		"GPIO6_6",
+
+		"USB0_ID",
+
+		"UART0_UARTRXD",
+		"UART0_UARTTXD",
+		"UART1_UARTTXD",
+		"UART1_UARTRXD",
+
+		"CAN0_TX0",
+		"CAN0_RX0",
+
+		"I2C0_SDA",
+		"I2C0_SCL",
+
+		"GPTIMER1_CH0",
+
+		/* SPI0's own MISO and IO0: the IP drives those pins, but SPI0
+		 * still has to *read* them (0x03 needs IO1, dual/quad need IO0
+		 * as well) -- see the comment above. */
+		"SPI0_SO_IO1",
+		"SPI0_SI_IO0";
+
+	mcu-pins =
+		<98>, <95>,
+		<51>, <52>, <53>, <54>,
+		<23>, <24>, <29>, <30>,
+		<78>,
+		<69>, <68>, <67>, <66>,
+		<39>, <38>,
+		<36>, <35>,
+		<7>,
+		<97>, <92>;
+
+	/* SPI0_SI_IO0 is an output function, so its row needs the direction
+	 * spelled out to get the read-back path; SPI0_SO_IO1 is an input
+	 * function and needs no direction. */
+	agm,mcu-input-pins = <92>;
+
+	/* Case B: the IP drives/reads the flash pins. */
+	cpld-signals = "csn", "sck", "si_io0", "so_io1";
+	cpld-pins = <96>, <93>, <92>, <97>;
+	cpld-directions = "output", "output", "output", "input";
+
+	/* Case C: the MCU's SPI0 is tapped into those IP ports. */
+	mcu-cpld-functions = "SPI0_CSN", "SPI0_SCK", "SPI0_SI_IO0";
+	mcu-cpld-signals = "csn", "sck", "si_io0";
+	mcu-cpld-directions = "", "", "output";
+};
+
+&dma0 {
+	status = "okay";
+};

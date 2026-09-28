@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable CAN0 (can0) on agrv2k_407 with the sample's bitrate.
+ *
+ * can_looptx is an on-bus TX burst generator — it requires an
+ * external CAN 2.0B peer (or a scope on PIN_39) to ACK the frames.
+ * 125 kbps matches the eval board's default routing (see board dts
+ * &can0 bitrate = <125000>); re-declared here for sample visibility.
+ */
+&can0 {
+	status = "okay";
+	bitrate = <125000>;
+};

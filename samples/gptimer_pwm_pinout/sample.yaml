@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: gptimer_pwm_pinout
+  description: GPTIMER1_CH0 -> PIN_7 hardware-output verification (scope on PIN_7)
+tests:
+  sample.gptimer_pwm_pinout.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

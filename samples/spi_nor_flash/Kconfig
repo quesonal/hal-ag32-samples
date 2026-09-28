@@ -1,0 +1,38 @@
+# Config options for the spi_nor_flash sample application
+
+# Copyright (c) 2026 AgRV Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "AgRV2K Zephyr spi-nor sample"
+
+config APP_SPI_NOR_SCAN
+	bool "Scan the whole part at the end (read-only)"
+	default y
+	help
+	  Read every 256-byte page of the part and report how much of it
+	  differs from the erase value. Read-only, but it is 8192 transfers.
+
+config APP_SPI_NOR_WRITE_TEST
+	bool "Erase and rewrite a sector through the flash API"
+	default n
+	help
+	  DESTRUCTIVE. Uses flash_erase() + flash_write() on one 4 KiB sector
+	  and reads every byte back. This is the path that hands the SPI
+	  driver a two-buffer TX list (command+address, then the data), i.e.
+	  the engine's TX DMA with the driver's bounce buffer.
+
+config APP_SPI_NOR_WRITE_OFFSET
+	hex "Sector that APP_SPI_NOR_WRITE_TEST erases and rewrites"
+	default 0x0
+	help
+	  The default is the first sector -- the boot vector area of a part
+	  the BOOT0/PIN_94 strap can boot from. Change it if that matters.
+
+config APP_SPI_NOR_KEEP_PROGRAMMED
+	bool "Leave the written data in the sector instead of erasing it again"
+	default n
+	help
+	  Skip the write test's final erase, so another tool can read the
+	  sector and see exactly what this path put there.
+
+source "Kconfig.zephyr"

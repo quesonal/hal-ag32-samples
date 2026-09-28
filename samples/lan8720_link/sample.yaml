@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: lan8720_link
+  description: |
+    Bring up the AgRV2K MAC0 + Microchip LAN8720 RMII Ethernet PHY,
+    report link state, and run an ICMP echo round-trip once the
+    net_if is up. The driver (drivers/ethernet/eth_agm.c) plugs the
+    MAC into the Zephyr Ethernet framework and the LAN8720 PHY
+    driver (drivers/ethernet/phy/phy_agm_lan8720.c) runs the
+    standard PHY framework on top of MAC0's MDIO bus. The probe
+    uses Zephyr's net_icmp_ctx API so the kernel builds a proper
+    type=8/code=0/checksum header; a successful reply confirms
+    the eth_agm TX + RX paths end-to-end.
+
+    PC side: any host on the same /24 as
+    CONFIG_NET_CONFIG_MY_IPV4_ADDR (default 192.168.1.10) that
+    answers ICMP echo. Override the target at build time with
+    -DCONFIG_LAN8720_LINK_PING_TARGET_IP=...
+
+    Dev bitstream: same as samples/lan8720_iperf
+    (the 100 MHz development bitstream,
+    100 MHz SYSCLK). Build with
+    -DEXTRA_DTC_OVERLAY_FILE=/tmp/agm100.overlay if the bitstream
+    on the board is the 100 MHz dev bitstream.
+tests:
+  sample.lan8720_link.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

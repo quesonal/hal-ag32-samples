@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * pm_gate_audit needs an `&spi0` with a runtime-PM action so the
+ * "all-PM-aware-put" print actually closes a gate. The flash-less
+ * bitstream is fine here -- nothing touches the bus -- and keeps the
+ * measurement close to a board with no extra peripherals attached.
+ */
+&spi0 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};

@@ -1,0 +1,8 @@
+name: hal_ag32_samples
+build:
+  cmake: .
+  kconfig: zephyr/Kconfig
+  # The samples directory itself is the twister root when this repo is
+  # the workspace anchor; when hal_ag32 pulls this repo, run
+  #   west twister -T modules/hal_ag32_samples/samples
+  twister: samples

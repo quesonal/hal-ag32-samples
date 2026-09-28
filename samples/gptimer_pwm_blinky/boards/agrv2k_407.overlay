@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable GPTIMER0 PWM on agrv2k_407. Mutually exclusive with the
+ * gpt0 counter driver — only one of &gpt0 / &gpt0_pwm may be
+ * status="okay" on the same instance.
+ *
+ * The PWM output is NOT routed to any physical pin by the shipped
+ * example_board.bin, so we can't drive the LED directly from the
+ * OCx pin. This sample instead uses the CC0IF compare event as
+ * a software tick: each CC0IF (1 Hz) toggles the LED GPIO.
+ */
+&gpt0_pwm {
+    status = "okay";
+};

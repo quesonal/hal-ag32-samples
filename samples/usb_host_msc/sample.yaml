@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: usb_host_msc
+  description: |
+    USB0 host-mode Mass Storage sample for AgRV2K. Plug a USB card reader or
+    flash drive into the USB0 connector: the sample runs the Bulk-Only
+    Transport (BOT) state machine itself (a sample-local class, since this
+    Zephyr revision ships no host MSC class) and issues SCSI INQUIRY,
+    READ CAPACITY(10) and READ(10) for LBA 0. It prints the vendor/product,
+    the card's capacity and the first bytes of the boot sector, then a PASS
+    line. This is the only sample that exercises the driver's bulk-transfer
+    path.
+tests:
+  sample.usb_host_msc.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - usb
+      - uhc
+      - host
+      - msc
+      - agrv2k

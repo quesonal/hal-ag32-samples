@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: wdt_feed
+  description: WDOG0 (SP805-style) watchdog feed/reset smoke test on agrv2k_407
+tests:
+  sample.wdt_feed.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+
+  # Device-testing (HIL): both halves of the WDOG0 test, in order -- phase A
+  # (INT only, three timeouts, no reset) and then the reset that follows when
+  # feeding stops, whose run #2 prints RST_CNTL with the WDOG bit set.
+  sample.wdt_feed.hil.agm_agrv2k_407:
+    harness: console
+    harness_config:
+      type: multi_line
+      ordered: true
+      regex:
+        - "wdt_feed: phase A done - [0-9]+ ISR timeouts without reset"
+        - "wdt_feed: RST_CNTL=0x[0-9a-f]+ \\(WDOG=1"
+    timeout: 120
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - hil
+      - hal_ag32

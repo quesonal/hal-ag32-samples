@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: lan8720_udp_direct
+  description: |
+    Hand-built Ethernet/IP/UDP upload at the AgRV2K on-die MAC0 +
+    LAN8720 RMII PHY.
+
+    Every header is written by the sample and the frame goes straight to
+    the driver through a packet socket, so there is no socket/IP/UDP
+    stack work per packet. The frames still carry legal iperf2 UDP
+    datagrams, so the PC runs plain `iperf -s -u` and its report is the
+    cross-check.
+
+    Why: with the normal stack (samples/lan8720_iperf) this board tops
+    out around 46 Mbit/s on the 200 MHz dev bitstream, while handing the
+    same frames straight to the driver reaches ~98 Mbit/s. The gap is
+    per-packet cost in the upstream network stack, not the MAC. See
+    the port record (ethernet) §3.28.9.
+
+    PC side: `iperf -s -u` (iperf2) on the same /24 as
+    CONFIG_NET_CONFIG_MY_IPV4_ADDR. The sample resolves the server's MAC
+    with its own ARP request, builds the frame template, then sends for
+    CONFIG_LAN8720_UDP_DIRECT_DURATION_MS.
+
+    The UDP checksum is left at 0 on purpose: IPv4 permits it (RFC 768)
+    and Linux accepts it, and computing it would mean scanning 1460 B
+    per frame out of a ~122 us line-rate budget.
+
+    Bench-measured on agrv2k_407 with the 200 MHz dev bitstream; see the
+    README and docs §3.28.9.
+tests:
+  sample.lan8720_udp_direct.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

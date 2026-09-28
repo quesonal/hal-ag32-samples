@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable the CPLD (FPGA fabric) AHB window on agrv2k_407.
+ *
+ * The window is board-level, like can0: the shipped example_board.bin has
+ * no fabric slave behind 0x60000000, and an access to an unanswered slave
+ * stalls the CPU (no hreadyout) instead of faulting. Flash a bitstream
+ * that decodes the offsets you touch before running this sample -- see
+ * the port record (CPLD/fabric).
+ */
+&cpld0 {
+	status = "okay";
+};

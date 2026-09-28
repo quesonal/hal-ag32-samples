@@ -1,0 +1,128 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_boot_loader
+  description: |
+    Stage-1 bootloader: lives in the on-die flash, keeps a boot record plus
+    an A/B pair of images in the flash pointed at by `store-flash` (the
+    on-board SPI NOR by default, or the on-die flash itself for the
+    on-die-only layout), copies the winning image into the on-die
+    application slot and runs it, and can update the fabric bitstream. The
+    protocol servers (AN3155 for agrv32flash, SMP for mcumgr) are part of
+    the boot driver. Builds are hardware-dependent (bitstream routing), so
+    both cases are build_only.
+tests:
+  sample.spi_boot_loader.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  sample.spi_boot_loader.ext_nor.agm_agrv2k_407:
+    build_only: true
+    extra_args:
+      - EXTRA_DTC_OVERLAY_FILE=boards/agrv2k_407_ext_nor.overlay
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # The trimmed build: both protocol servers off. This is what caught the
+  # console calling into the AN3155 server unconditionally -- turning the
+  # option off used to be a link error instead of a smaller image (the
+  # sample's own 0x7F INIT handler and `an-status` command were the two
+  # references; the driver-side ones are already guarded by the header).
+  sample.spi_boot_loader.trimmed.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_BOOT_AGM_AN3155=n
+      - CONFIG_BOOT_AGM_SMP=n
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # The signed fabric: the bitstream slots hold signed MCUboot containers, so
+  # the boot path verifies the fabric before it streams it. No key is passed
+  # (the driver's weak default is all zeroes and accepts nothing) -- what this
+  # scenario covers is the build itself: the Kconfig combination, the
+  # tinycrypt link, and the interrupt-stack requirement, which is a
+  # BUILD_ASSERT in soc/agm/agrv2k/fcb.c precisely because getting it wrong
+  # leaves a board that never reaches the console.
+  sample.spi_boot_loader.bs_signed.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_BOOT_AGM_SIG_ECDSA_P256=y
+      - CONFIG_BOOT_AGM_BITSTREAM_SIGNED=y
+      - CONFIG_ISR_STACK_SIZE=4096
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # ... and the same with an RSA application profile, which is the build that
+  # links *both* verifiers: PSA/RSA for the application images and tinycrypt
+  # P-256 for the fabric.
+  sample.spi_boot_loader.bs_signed_rsa.agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_BOOT_AGM_SIG_RSA2048_PSS=y
+      - CONFIG_BOOT_AGM_BITSTREAM_SIGNED=y
+      - CONFIG_ISR_STACK_SIZE=4096
+      - CONFIG_MBEDTLS_PSA_KEY_SLOT_COUNT=2
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # The production profile's shape (R2b, the production-lock design 6.4):
+  # publishing an upload and erasing a target need a signed command, and the
+  # vendor tool's server -- which cannot carry one -- is compiled out. No key is
+  # passed, as in bs_signed above: a locked build with no P-256 key refuses
+  # every state change (fail closed), and what this scenario pins is that the
+  # combination builds (it links tinycrypt for the command verifier).
+  sample.spi_boot_loader.locked.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_BOOT_AGM_AN3155=n
+      - CONFIG_BOOT_AGM_LOCK_PRODUCTION=y
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # The production profile's *shipped* shape: one preset pulls in the lock, the
+  # SMP server (the only path that can sign a command), the signed fabric and
+  # the mcumgr/base64 stack it needs, defaults AN3155 off and the signature
+  # profile to ECDSA P-256 (see CONFIG_BOOT_AGM_PRODUCTION_PROFILE). The public
+  # key is a checked-in CI key (fixtures/README.md): without any key the
+  # sample's CMake refuses to configure, which is the point -- a production
+  # image nobody can update again is a build error, not a surprise found on a
+  # board. ISR_STACK_SIZE is what the signed-fabric verifier needs (fcb.c has
+  # the BUILD_ASSERT).
+  sample.spi_boot_loader.production.agm_agrv2k_407:
+    build_only: true
+    extra_args:
+      - SPI_BOOT_PUBKEY=fixtures/ci_production.pub
+    extra_configs:
+      - CONFIG_BOOT_AGM_PRODUCTION_PROFILE=y
+      - CONFIG_ISR_STACK_SIZE=4096
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

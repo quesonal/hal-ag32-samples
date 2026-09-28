@@ -1,0 +1,9 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable RTC0 (rtc0) on agrv2k_407: backup-domain 1 Hz counter whose
+ * alarm wakes the SoC from stop (and standby) mode. Defaults:
+ * agm,rtc-source "lse" (32768 Hz crystal), agm,prescaler 32767.
+ */
+&rtc0 {
+	status = "okay";
+};

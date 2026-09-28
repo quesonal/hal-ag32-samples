@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# k_busy_wait's pacing: does the wait match the frequency this build declares?
+# The sample is a measurement, so it is build-only in twister and its evidence
+# is a console capture (kept in `the development notes (not published here)`).
+
+sample:
+  name: busy_wait_timebase
+  description: k_busy_wait against the declared SYSCLK (cycles per us, build time)
+tests:
+  sample.busy_wait_timebase.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

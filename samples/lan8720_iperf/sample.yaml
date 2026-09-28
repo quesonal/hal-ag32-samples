@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: lan8720_iperf
+  description: |
+    iperf2-compatible TCP throughput test client.
+
+    Streams TCP data to an external iperf2 server (`iperf -s` on the
+    PC) for CONFIG_LAN8720_IPERF_DURATION_MS and reports throughput
+    over UART. Uses the upstream zperf library
+    (CONFIG_NET_ZPERF, server/shell disabled) for the upload path,
+    which gives a tested iperf2-compatible wire format.
+
+    Sequence: PHY link up -> iface operational -> ICMP pre-flight at
+    the server address (separates "board cannot reach the PC" from
+    "no iperf2 server listening") -> one zperf TCP upload -> bytes /
+    packets / send errors / Mbit/s -> PASS/FAIL against
+    CONFIG_LAN8720_IPERF_MIN_MBITPS.
+
+    Re-uses the same dev bitstream, pin list and 100 MHz clock as
+    samples/lan8720_link (eth0 / mdio0 / phy0 nodes). Adds a static
+    IPv4 address via CONFIG_NET_CONFIG_* and a server endpoint via
+    LAN8720_IPERF_* Kconfig (see Kconfig in this sample).
+
+    PC-side setup and the run order (start `iperf -s` BEFORE the
+    board boots -- the upload begins a few seconds after reset) are
+    in README.md, together with the buffer tuning knobs and the
+    symptom table for reading a low number.
+
+    PC must run iperf2 (NOT iperf3 -- different protocol). On Debian
+    and Ubuntu `iperf -s` gives 2.x; on Fedora / Alpine / macOS
+    Homebrew the `iperf` binary is iperf3, install the iperf2 package
+    or build from source.
+
+    Expect the iperf2 server to also print a cosmetic
+    "LAST PACKET NOT RECEIVED!!!" line -- zperf does not send the
+    28-byte iperf2 TCP control header, and modern iperf2 servers
+    tolerate that and still report throughput.
+
+    Build-only verified so far; the first dev board run should record its
+    numbers in the port record (ethernet) §3.28.1.
+tests:
+  sample.lan8720_iperf.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

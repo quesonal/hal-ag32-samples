@@ -1,0 +1,94 @@
+/*  SPDX-License-Identifier: Apache-2.0 */
+/*
+ * lan8720_iperf -- board overlay for the iperf2 TCP throughput test.
+ * Same dev bitstream as samples/lan8720_link — the canonical
+ *   <your canonical bitstream>
+ *   200 MHz SYSCLK / 100 MHz HCLK (board defaults), MAC pins routed per
+ *   example_board_routed.v (PIN_43..47 + 57..59).
+ *
+ * Three things land here:
+ *
+ *   1. Replace the shared pin list with the MAC0 RMII pins.
+ *      PHY_RSTB / MAC0_PHY_INTB are NOT routed in this bitstream --
+ *      PHY reset is MII_BMCR soft reset only, link is monitored via
+ *      BMSR polling (same as lan8720_link).
+ *
+ *   2. Enable the eth0 (MAC0) + mdio0 + phy0 nodes.
+ *
+ *   3. Override the 200 MHz board default to 100 MHz (matches the
+ *      dev bitstream). Without this the UART baud and tick rate are
+ *      wrong (silent console at the configured 115200 8N1).
+ *
+ * IP addresses come from prj.conf (CONFIG_NET_CONFIG_*); not set
+ * here so the user can override the board IP at build time with
+ * -DCONFIG_NET_CONFIG_MY_IPV4_ADDR=... without editing the overlay.
+ */
+
+&agrv2k_pins {
+	mcu-functions =
+		/* MAC0 RMII pins -- same pin list as lan8720_link */
+		"MAC0_RXD0",
+		"MAC0_RXD1",
+		"MAC0_TXD0",
+		"MAC0_TXD1",
+		"MAC0_TX_EN",
+		"MAC0_CRS",
+		"MAC0_TX_CLK",
+		"MAC0_MDC",
+		"MAC0_MDIO",
+
+		/* The console UART0 is routed by this bitstream as well (the
+		 * banner comes out of it), so it belongs in this list: the list
+		 * describes what the *bitstream* routes, not just what this
+		 * sample uses. tools/check_pinctrl.py compares it against the
+		 * netlist. */
+		"UART0_UARTRXD",
+		"UART0_UARTTXD";
+	mcu-pins =
+		<47>, <46>,
+		<44>, <43>,
+		<45>,
+		<56>,
+		<57>,
+		<58>, <59>,
+
+		/* UART0 console: PIN_69 = RX, PIN_68 = TX */
+		<69>, <68>;
+};
+
+&eth0 {
+	status = "okay";
+};
+
+&mdio0 {
+	status = "okay";
+};
+
+&phy0 {
+	status = "okay";
+};
+
+/* Clock: the dev bitstream is now
+ *   <your canonical bitstream>
+ * (VE: SYSCLK 200 / BUSCLK 100 / HSECLK 8), which is exactly what the
+ * agrv2k_407 board defaults describe (AGM_SYSCLK_HZ 200 MHz,
+ * AGM_FLASH_MAX_HZ 100 MHz), so there is nothing to override here.
+ *
+ * The older 100 MHz bitstream needs the opposite: build with
+ *   -- -DEXTRA_DTC_OVERLAY_FILE=/tmp/agm100.overlay
+ * (clk0/cpu0 100 MHz, flash ceiling 50 MHz), otherwise the UART baud
+ * and the tick rate are both wrong.
+ *
+ * 2026-09-15: measured on both bitstreams, the iperf2 UDP rate scales
+ * with these clocks -- 23.08 Mbit/s (100/50) vs 46.37 (200/100) vs
+ * 29.75 (200 SYSCLK but flash held at 50). See
+ * the port record (ethernet) §3.28.9.
+ */
+
+/* The agm,pins cells (function -> GPIO bank/bit -> dir) are generated:
+ * tools/generate_pinctrl_dtsi.py turns this file's mcu-functions list plus
+ * the SoC AF table (tools/agm_af_pins.yaml) into that fragment. Do not
+ * hand-write them here -- tools/check_pinctrl.py fails if the effective
+ * state and the pin list disagree. See the pin-routing notes §12.
+ */
+#include <agm/pinctrl-devmac.dtsi>

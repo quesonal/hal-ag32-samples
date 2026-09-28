@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: usb_host_hid
+  description: |
+    USB0 host-mode HID sample for AgRV2K. Plug a mouse, keyboard or a wireless
+    receiver into the USB0 connector: the sample finds the HID interface's
+    interrupt IN endpoint and keeps polling it, printing every report it gets
+    (hex) until it has seen four, then prints PASS. This is the only sample
+    that drives the driver's *periodic* schedule, so it is the interrupt
+    transfer coverage for uhc_agm.
+tests:
+  sample.usb_host_hid.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - usb
+      - uhc
+      - host
+      - hid
+      - agrv2k

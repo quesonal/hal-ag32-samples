@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "user_ip"
+
+# This sample sets its own Kconfig root (see CMakeLists.txt), so it has to pull
+# the Zephyr tree in itself -- without it, prj.conf's SERIAL/PRINTK are
+# undefined symbols.
+source "Kconfig.zephyr"
+
+config APP_USER_IP_TOUCH_BUS
+	bool "Touch the register block at runtime"
+	default n
+	help
+	  Read the ID register through the cpld_agm API, exercise the block
+	  guard, and print RESULT: OK/FAIL for the dev board. Off by default: this
+	  bus has no timeout -- an offset the bitstream does not decode stalls
+	  the CPU with no fault and no console output -- so the sample only
+	  touches it when the flashed bitstream really has the block (the
+	  vendor echo/analog_ip examples do).

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: dma_memcpy
+  description: SRAM-to-SRAM DMA memcpy smoke test on agrv2k_407 (AGM DMA driver)
+tests:
+  sample.dma_memcpy.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+
+  # Device-testing (HIL) variant: builds *and runs* on a board with the probe
+  # attached. Build-only cases cannot catch a runtime regression, and this one
+  # has caught exactly that -- the AHB gate that DMAC0 sits behind was only
+  # opened in CONFIG_CRC_AGM builds for a day, which made every DMA transfer
+  # fail (the SPI driver's long RX then timed out with -ETIMEDOUT). See the
+  # port record (peripherals) 3.27.17 and docs/SAMPLE-WORKFLOW.md for the
+  # command.
+  #
+  #   west twister -T modules/hal_ag32/samples -p agrv2k_407 \
+  #       --device-testing --device-serial /dev/ttyACM0 --west-flash \
+  #       -s sample.dma_memcpy.hil.agm_agrv2k_407
+  sample.dma_memcpy.hil.agm_agrv2k_407:
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "dma_memcpy: iter [0-9]+ OK"
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - hil
+      - hal_ag32

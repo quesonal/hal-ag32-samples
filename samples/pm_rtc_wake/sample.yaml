@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: pm_rtc_wake
+  description: AG32 stop/standby RTC alarm wake demo on agrv2k_407 
+tests:
+  sample.pm_rtc_wake.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

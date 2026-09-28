@@ -1,0 +1,5 @@
+config HAL_AGM_SAMPLES
+    bool "hal_ag32 samples"
+    default y
+    help
+      This is a marker Kconfig that lives in the hal_ag32_samples repo.

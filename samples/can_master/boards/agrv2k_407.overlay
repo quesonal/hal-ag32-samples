@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable CAN0 (can0) on agrv2k_407 with the sample's bitrate.
+ *
+ * can_master implements a PING/START/DATA/STOP handshake against an
+ * external CAN 2.0B slave node. 125 kbps matches the peer protocol.
+ * Re-declaring here for sample-level visibility — board dts already
+ * enables &can0.
+ */
+&can0 {
+	status = "okay";
+	bitrate = <125000>;
+};

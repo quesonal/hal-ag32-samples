@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: usb_cdc_echo
+  description: |
+    USB0 CDC-ACM echo sample for AgRV2K (`the development notes (not published here)`).
+
+    The on-board bitstream already bridges UART0 to the CMSIS-DAP probe
+    interface 1 (ttyACM0 = debug, NOT CDC-ACM). This sample exposes a
+    second, virtual UART — the "zephyr,cdc-acm-uart" DLM under
+    &zephyr_udc0 — which presents as a separate /dev/ttyACMx on the
+    host when USB0 is plugged in. The main thread bridges USB-CDC-RX
+    to USB-CDC-TX through a ring buffer (software echo). No physical
+    loopback wiring is required for this sample — host ↔ device over
+    the USB cable is the loopback path.
+tests:
+  sample.usb_cdc_echo.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - usb
+      - udc
+      - cdc-acm
+      - agrv2k

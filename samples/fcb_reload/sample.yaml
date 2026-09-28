@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: fcb_reload
+  description: |
+    Probe which bitstream is live after a FLASH-side reload: print the FCB
+    STAT and a SPI0 RDID so the dev board can show that the fabric content
+    follows FLASH while the firmware stays byte-identical. Reload =
+    flash_logic.sh + reboot; there is no runtime hot-swap, because on
+    AgRV2K the CPU's clock tree comes out of the fabric (see README.md).
+    Bench-verified: pending (2026-09-14 board recovery still needed).
+tests:
+  sample.fcb_reload.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

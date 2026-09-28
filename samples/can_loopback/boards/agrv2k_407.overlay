@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable CAN0 (can0) on agrv2k_407 with the sample's bitrate.
+ *
+ * The board dts already enables &can0 with bitrate = <125000>;
+ * re-declaring here makes the sample's bus configuration explicit
+ * and lets a future board without a CAN0 node fail the build with
+ * a clear "node not found" error rather than silently dropping the
+ * peripheral.
+ */
+&can0 {
+	status = "okay";
+	bitrate = <125000>;
+};

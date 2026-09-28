@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: gptimer_pwm_blinky
+  description: GPTIMER0 CC0IF-driven LED blinky (software toggle, no bitstream dependency)
+tests:
+  sample.gptimer_pwm_blinky.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

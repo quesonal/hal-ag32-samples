@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: gpio_irq
+  description: |
+    GPIO6 edge → Stellaris GPIO MIS → PLIC line 13 → MEIP dispatch
+    demo on agrv2k_407 (vanilla ti,stellaris-gpio driver, no raw MMIO
+    in the interrupt path).
+tests:
+  sample.gpio_irq.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - gpio
+      - plic
+      - interrupt

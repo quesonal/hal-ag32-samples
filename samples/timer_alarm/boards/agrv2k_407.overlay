@@ -1,0 +1,9 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable TIMER0 (tim0) on agrv2k_407. The counter_agm_timer driver
+ * enables the unit APB clock gate itself at init; both sub-timers are
+ * exposed as alarm channels 0/1.
+ */
+&tim0 {
+	status = "okay";
+};

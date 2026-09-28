@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable CAN0 (can0) on agrv2k_407 with the sample's bitrate.
+ *
+ * can_rxmon is a passive CAN0 RX monitor — it never requests TX,
+ * so there is no ACK constraint; only RX0 pin health (PIN_38) and
+ * the on-die SJA1000 RX path matter. 125 kbps matches the eval
+ * board default. Re-declared here for sample visibility.
+ */
+&can0 {
+	status = "okay";
+	bitrate = <125000>;
+};

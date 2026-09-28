@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for can_txedge. Build-only: the test samples a
+# live TX waveform with GPIO7.3 / PIN_38 and needs both a jumper and
+# a scope / logic analyzer to produce meaningful output.
+sample:
+  name: can_txedge
+  description: CAN0 SELFTEST-mode TX-edge timing — bit-time + polarity probe via GPIO7.3 (PIN_38)
+tests:
+  sample.can_txedge.agm_agrv2k_407:
+    build_only: true
+    # The 3x edge-measurement bug that produced the old "f_can = SYSCLK/3"
+    # claim is FIXED (2026-09-12, §3.18), but the corrected probe still has
+    # to be re-run on hardware with the transceivers disconnected, so
+    # `skip` stays.
+    skip: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - can

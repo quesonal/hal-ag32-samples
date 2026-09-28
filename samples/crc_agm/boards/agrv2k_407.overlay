@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable the SoC's CRC unit and point Zephyr at it. The `zephyr,crc` chosen
+ * node is what makes subsys/crc/crc_hardware.c take over crc32_ieee() --
+ * without it the node is just an unused device and the library keeps using
+ * its own software implementation.
+ */
+&crc0 {
+	status = "okay";
+};
+
+/ {
+	chosen {
+		zephyr,crc = &crc0;
+	};
+};

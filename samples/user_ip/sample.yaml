@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: user_ip
+  description: |
+    Reach a piece of user logic in the AgRV2K fabric from Zephyr, splitting
+    the description where it belongs: the *window* comes from devicetree
+    (agm,agrv2k-cpld, which the driver range-checks), the *register map* from
+    a header next to the RTL (src/user_ip_regs.h) -- the same board with
+    another bitstream has different registers, and devicetree cannot express
+    bitfields. The build asserts the block fits the window and every register
+    fits the block; the runtime half prints that map and touches the bus only
+    when CONFIG_APP_USER_IP_TOUCH_BUS is on (an unmapped offset stalls the CPU
+    instead of faulting).
+tests:
+  sample.user_ip.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # Same devicetree, with the bus access enabled: builds the read path the
+  # application uses on a board whose bitstream really has the IP.
+  sample.user_ip.touch_bus.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_APP_USER_IP_TOUCH_BUS=y
+    platform_allow:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

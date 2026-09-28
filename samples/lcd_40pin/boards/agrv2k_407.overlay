@@ -1,0 +1,120 @@
+/*  SPDX-License-Identifier: Apache-2.0 */
+/*
+ * lcd_40pin — pin map for the 40-pin adapter (`转接板`) that carries the
+ * FPC4301MS-L190-40C-9A LCM (HX8369A, 480x800) on a 16-bit 8080 bus plus a
+ * SPI-ish resistive-touch section.
+ *
+ * Everything the LCD needs is plain GPIO: the AgRV2K has no LCD controller,
+ * so the fabric only has to route each adapter pin to a GPIO bit (the GPIOb_n
+ * functions have no AFSEL bit, so they carry no `agm,pins` cell -- this pin
+ * list is what board.ve is rendered from, see the board.ve notes).
+ *
+ * The pin numbers below are a *proposal*: it is the only thing this sample
+ * cannot derive from the adapter's pin list. Rebuild the bitstream after
+ * changing them (`west build -t logic`), and keep the LCD node in step.
+ * Console UART0 stays where the board has it (PIN_69/68).
+ */
+
+&agrv2k_pins {
+	mcu-functions =
+		/* console: the sample prints PASS/FAIL over it */
+		"UART0_UARTRXD",
+		"UART0_UARTTXD",
+
+		/* DB0..DB15 -> GPIO1 bits 0..7, GPIO2 bits 0..7
+		 * (pins from the dev board wiring table, 2026-09-16) */
+		"GPIO1_0", "GPIO1_1", "GPIO1_2", "GPIO1_3",
+		"GPIO1_4", "GPIO1_5", "GPIO1_6", "GPIO1_7",
+		"GPIO2_0", "GPIO2_1", "GPIO2_2", "GPIO2_3",
+		"GPIO2_4", "GPIO2_5", "GPIO2_6", "GPIO2_7",
+
+		/* control: CS / RS(DC) / WR / RD -> GPIO3 bits 0..3
+		 * (bits 4/5 of bank 3 are the I2C0 AF rows below) */
+		"GPIO3_0", "GPIO3_1", "GPIO3_2", "GPIO3_3",
+
+		/* RST / BL_CTR -> GPIO6 bits 2/4 */
+		"GPIO6_2", "GPIO6_4",
+
+		/* capacitive touch (GT911) on I2C0 + its INT/RST */
+		"I2C0_SDA", "I2C0_SCL",
+		"GPIO5_0", "GPIO5_1";
+	mcu-pins =
+		<69>, <68>,
+		<25>, <26>, <29>, <30>, <31>, <32>, <33>, <34>,
+		<35>, <36>, <38>, <39>, <40>, <41>, <91>, <1>,
+		<15>, <16>, <17>, <18>,
+		<23>,
+		<89>,
+		<3>, <2>,
+		<4>, <5>;
+
+	/* the adapter's CTP needs the usual I2C pull-ups */
+	agm,pull-ups = <2>, <3>;
+};
+
+&{/} {
+	lcd0: lcd-8080 {
+		compatible = "agm,lcd-8080";
+
+		/* DB0..DB15: low bit first (GPIO1_PIN0..7 then GPIO2_PIN0..7) */
+		data-gpios =
+			<&gpio1 0 GPIO_ACTIVE_HIGH>, <&gpio1 1 GPIO_ACTIVE_HIGH>,
+			<&gpio1 2 GPIO_ACTIVE_HIGH>, <&gpio1 3 GPIO_ACTIVE_HIGH>,
+			<&gpio1 4 GPIO_ACTIVE_HIGH>, <&gpio1 5 GPIO_ACTIVE_HIGH>,
+			<&gpio1 6 GPIO_ACTIVE_HIGH>, <&gpio1 7 GPIO_ACTIVE_HIGH>,
+			<&gpio2 0 GPIO_ACTIVE_HIGH>, <&gpio2 1 GPIO_ACTIVE_HIGH>,
+			<&gpio2 2 GPIO_ACTIVE_HIGH>, <&gpio2 3 GPIO_ACTIVE_HIGH>,
+			<&gpio2 4 GPIO_ACTIVE_HIGH>, <&gpio2 5 GPIO_ACTIVE_HIGH>,
+			<&gpio2 6 GPIO_ACTIVE_HIGH>, <&gpio2 7 GPIO_ACTIVE_HIGH>;
+
+		cs-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
+		rs-gpios = <&gpio3 1 GPIO_ACTIVE_HIGH>;
+		wr-gpios = <&gpio3 2 GPIO_ACTIVE_LOW>;
+		rd-gpios = <&gpio3 3 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio6 2 GPIO_ACTIVE_LOW>;
+		backlight-gpios = <&gpio6 4 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+/*
+ * Capacitive touch: GT911 on the adapter (I2C, addr 0x5D) with its own INT
+ * and reset lines. Zephyr's goodix,gt911 driver is upstream -- nothing
+ * sample-specific. (The resistive variant of this adapter instead exposes
+ * T_CLK/T_MOSI/RT_MISO/T_CS/T_PEN/RT_BUSY, which this sample does not wire.)
+ */
+&i2c0 {
+	status = "okay";
+
+	gt911: touch@5d {
+		compatible = "goodix,gt911";
+		reg = <0x5d>;
+		irq-gpios = <&gpio5 0 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio5 1 GPIO_ACTIVE_LOW>;
+	};
+};
+
+/*
+ * Only the banks this sample drives: the board enables gpio4 (LEDs) and
+ * gpio6 (buttons). Enabling a bank is also what opens its APB clock
+ * (soc.c::AGM_GATE_GPIO_BANK walks the status=okay GPIO nodes), so a bank
+ * used here must be listed even though the fabric owns the pin routing.
+ */
+&gpio1 {
+	status = "okay";
+};
+
+&gpio2 {
+	status = "okay";
+};
+
+&gpio3 {
+	status = "okay";
+};
+
+&gpio5 {
+	status = "okay";
+};
+
+&gpio6 {
+	status = "okay";
+};

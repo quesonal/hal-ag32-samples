@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for can_looptx_ack. Build-only: the test loops frames
+# on a single AgRV board and uses PIN_23 GPIO to inject a dominant pulse
+# in the ACK slot, so it needs the PIN_38<->PIN_23 jumper for the RX
+# path to be exercised — not runnable under twister.
+sample:
+  name: can_looptx_ack
+  description: CAN0 NORMAL-mode TX + software ACK injection via PIN_23 — single-board RX-path smoke
+tests:
+  sample.can_looptx_ack.agm_agrv2k_407:
+    build_only: true
+    # NOT yet validated on hardware. The ~890 us ACK-slot pulse only became
+    # correctly timed once the bit-rate bug was fixed (2026-09-12, §3.18),
+    # but no successful IR.RI=1 + SR.RBS=1 capture with the PIN_38<->PIN_23
+    # jumper in place has been observed yet, so `skip` stays.
+    skip: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - can

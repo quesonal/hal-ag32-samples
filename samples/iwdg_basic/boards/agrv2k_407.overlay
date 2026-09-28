@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable IWDG (iwdg0) on agrv2k_407. The wdt_iwdg_agm driver has no
+ * APB gate to open and no IRQ to wire up; arming happens from
+ * wdt_setup().
+ *
+ * DT defaults (from dts/riscv/agm/agrv2k.dtsi):
+ *   agm,prescaler  = <64>   → ~2 s timeout on LSI (32 kHz)
+ *   agm,clk-source = "lsi"  → no external crystal needed
+ *   agm,freeze-mode = "stop" → counter freezes in STOP, keeps running
+ *                             in STANDBY (default for standby wake-up
+ *                             via reset).
+ */
+&iwdg0 {
+	status = "okay";
+};

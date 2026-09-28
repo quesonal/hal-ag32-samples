@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+
+# Pull in the upstream USB sample options (SAMPLE_USBD_PID,
+# SAMPLE_USBD_PRODUCT, SAMPLE_USBD_VID, ...) so prj.conf can set them.
+# The `source` path is relative to $ZEPHYR_BASE.
+source "samples/subsys/usb/common/Kconfig.sample_usbd"
+
+source "Kconfig.zephyr"

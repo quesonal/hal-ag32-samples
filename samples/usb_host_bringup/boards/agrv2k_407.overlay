@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) 2026 AgRV Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * USB0 as a host controller. The board enables the device role by default and
+ * USB0 is one piece of silicon with one role at a time, so usb0 is disabled
+ * and the host node enabled under the label this sample looks up.
+ */
+
+&usb0 {
+	status = "disabled";
+};
+
+zephyr_uhc0: &uhc0 {
+	status = "okay";
+};

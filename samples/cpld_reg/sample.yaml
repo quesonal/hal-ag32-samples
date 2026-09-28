@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: cpld_reg
+  description: |
+    AgRV2K CPLD (FPGA fabric) AHB window access through the module's
+    cpld_agm driver (agm_cpld_read32/write32). Needs a bitstream with a
+    mem_ahb slave, so every case is build_only.
+tests:
+  sample.cpld_reg.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  sample.cpld_reg.echo.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_APP_CPLD_ECHO_TEST=y
+    platform_allow:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+  # Exercises the optional `cpld` shell on top of the same sample.
+  sample.cpld_reg.shell.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_SHELL=y
+      - CONFIG_CPLD_AGM_SHELL=y
+    platform_allow:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

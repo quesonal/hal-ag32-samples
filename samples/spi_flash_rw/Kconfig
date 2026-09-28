@@ -1,0 +1,62 @@
+# Config options for the spi_flash_rw sample application
+
+# Copyright (c) 2026 AgRV Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "AgRV2K SPI flash erase/program sample"
+
+config APP_FLASH_RW_FREQUENCY
+	int "SPI clock used for the erase/program test"
+	default 25000000
+	help
+	  Anything the part and the pin routing tolerate works; the program
+	  and erase times do not depend on it.
+
+config APP_FLASH_RW_TEST_OFFSET
+	hex "Address of the sector this sample erases and reprograms"
+	default 0x0
+	help
+	  The sample owns the whole 4 KiB sector starting here. The default is
+	  the first sector, i.e. the boot vector area of a part the BOOT0 strap
+	  can boot from -- change it if that matters on your board.
+
+config APP_FLASH_RW_KEEP_PROGRAMMED
+	bool "Leave the test data in the sector instead of erasing it again"
+	default n
+	help
+	  Skip the final erase. The next boot (the sample reports what the
+	  sector holds before it touches it) then shows whether the data
+	  survived, which is the one thing a same-boot read-back cannot.
+
+config APP_FLASH_RW_DUMP_BYTES
+	int "Bytes of the sector to print before it is erased"
+	default 16
+	range 0 256
+	help
+	  The sample reads the sector before touching it; this many bytes are
+	  printed as hex. Useful when another tool (or another flash driver)
+	  wrote the sector and you want to see the actual layout.
+
+config APP_FLASH_RW_CS_GPIO
+	bool "Drive the chip select from a GPIO instead of the engine"
+	default n
+	help
+	  Uses LED3's pin (gpio4_3, forced to an output) as a stand-in chip
+	  select, which is the only pin on this board nothing else needs: the
+	  point is to exercise the driver's cs_is_gpio path -- configure the
+	  pin, assert it for the transfer, release it afterwards. A
+	  higher-priority thread samples the pin to see both states; the flash
+	  itself is still selected by the engine, so the data must still be
+	  correct.
+
+config APP_FLASH_RW_QUAD
+	bool "Also try a quad (4 data line) read against the single-line read"
+	default n
+	help
+	  Sets the flash's QE bit, reads a programmed page with 0x6B (command
+	  and address on one line, then the data on four) and compares it with
+	  the 0x03 read of the same bytes. Needs a bitstream that routes the
+	  controller's IO2/IO3 (and IO0 back) to the flash: on the dev board that is
+	  spi_full_bitstream_97pad, where IO0/IO1/IO2/IO3 = PIN_92/97/98/95.
+
+source "Kconfig.zephyr"

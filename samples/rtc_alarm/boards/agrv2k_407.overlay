@@ -1,0 +1,10 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable RTC0 (rtc0) on agrv2k_407. Defaults: agm,rtc-source "lse"
+ * (32768 Hz crystal), agm,prescaler 32767 -> 1 Hz counter. If the
+ * board has no LSE crystal, override the source ("lsi"/"local") and
+ * frequency in this overlay.
+ */
+&rtc0 {
+	status = "okay";
+};

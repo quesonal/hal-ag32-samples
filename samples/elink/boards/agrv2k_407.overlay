@@ -1,0 +1,97 @@
+/*  SPDX-License-Identifier: Apache-2.0 */
+/*
+ * elink -- Pervasive Displays E2271CS091 (2.7", 264x176, G2/iTC COG) on the
+ * AgRV2K's SPI1 engine. No custom bitstream: the 200 MHz reference bitstream
+ * (<your canonical bitstream>) already routes SPI1 and
+ * the button pins this sample needs, so the pin list below is exactly what
+ * that board.ve carries:
+ *
+ *    SPI1_WPN_IO2    PIN_60        (routed, unused here)
+ *    SPI1_HOLDN_IO3  PIN_61        (routed, unused here)
+ *    SPI1_SCK        PIN_62   SCL  panel clock   -> engine SCK
+ *    SPI1_SI_IO0     PIN_63   SDA  panel data in -> engine MOSI
+ *    SPI1_SO_IO1     PIN_64        (MISO, the panel never drives it)
+ *    SPI1_CSN        PIN_65   CSB  -> engine chip select
+ *    GPIO6_2         PIN_23   RST_N   (board Button1 pin)
+ *    GPIO6_4         PIN_24   DC      (board Button2 pin)
+ *    GPIO6_5         PIN_55   BUSY_N  (board Key pin)
+ *    UART0           PIN_69 / PIN_68   console
+ *
+ * The three control/status lines stay GPIOs: the fabric's pin map decides
+ * which pin carries which GPIO bit, and these are the pins the reference
+ * bitstream exposes as GPIO.
+ *
+ * The sample's pin list replaces the board default wholesale (a dts overlay
+ * replaces a property, it does not append), so it lists every row this
+ * sample needs -- console, the four SPI1 lines it uses, and the three GPIOs.
+ * Building a new bitstream from this file (`west build -t logic`) therefore
+ * reproduces the reference routing for these pins.
+ */
+
+&agrv2k_pins {
+	mcu-functions =
+		"UART0_UARTRXD",
+		"UART0_UARTTXD",
+		"SPI1_WPN_IO2",
+		"SPI1_HOLDN_IO3",
+		"SPI1_SCK",
+		"SPI1_SI_IO0",
+		"SPI1_SO_IO1",
+		"SPI1_CSN",
+		"GPIO6_2",
+		"GPIO6_4",
+		"GPIO6_5";
+	mcu-pins =
+		<69>,
+		<68>,
+		<60>,
+		<61>,
+		<62>,
+		<63>,
+		<64>,
+		<65>,
+		<23>,
+		<24>,
+		<55>;
+};
+
+&spi1 {
+	status = "okay";
+
+	elink0: elink@0 {
+		compatible = "agm,epd-g2";
+		reg = <0>;
+		/* The panel takes 10 MHz; 8 MHz divides SYSCLK cleanly and is
+		 * what the application note's own examples use. */
+		spi-max-frequency = <8000000>;
+		width = <264>;
+		height = <176>;
+
+		dc-gpios = <&gpio6 4 GPIO_ACTIVE_HIGH>;          /* PIN_24 */
+		reset-gpios = <&gpio6 2 GPIO_ACTIVE_LOW>;        /* PIN_23 */
+		busy-gpios = <&gpio6 5 GPIO_ACTIVE_LOW>;         /* PIN_55 */
+	};
+};
+
+/*
+ * GPIO6_2 and GPIO6_4 are the board's Button1/Button2 pins; this sample
+ * drives them as RST_N and DC. Drop the gpio-keys nodes that own them (and
+ * the Key pin GPIO6_5 that becomes BUSY_N) so nothing else reconfigures
+ * those pins behind the sample's back.
+ */
+&{/keys/button1} {
+	status = "disabled";
+};
+
+&{/keys/button2} {
+	status = "disabled";
+};
+
+&{/keys/sw1} {
+	status = "disabled";
+};
+
+/* The SPI engine's long transfers stream through the system DMAC. */
+&dma0 {
+	status = "okay";
+};

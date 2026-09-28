@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Sample-local Kconfig for the link-state + ICMP echo reachability
+# probe. Network-stack options (zperf, ETH drivers, buffers, IP)
+# live in prj.conf; this file only owns the knob the user is
+# expected to touch when pointing the probe at a different host.
+#
+# `source "Kconfig.zephyr"` pulls in all the standard networking /
+# driver / OS symbols so that prj.conf's CONFIG_NET_* references
+# resolve at parse time. Without this line, every symbol in
+# prj.conf becomes an "undefined symbol" warning and Kconfig
+# aborts.
+
+source "Kconfig.zephyr"
+
+menuconfig LAN8720_LINK
+	bool "lan8720_link sample"
+	default y
+	help
+	  Enable the link-state + ICMP echo reachability probe on the
+	  AgRV2K on-die MAC0 + LAN8720 RMII PHY.
+
+if LAN8720_LINK
+
+config LAN8720_LINK_PING_TARGET_IP
+	string "ICMP echo target IPv4 address"
+	default "192.168.15.100"
+	help
+	  IPv4 address of the host the board sends an ICMP echo request
+	  to. Must be in the same /24 subnet as the board's
+	  CONFIG_NET_CONFIG_MY_IPV4_ADDR. Override at build time with
+	  -D CONFIG_LAN8720_LINK_PING_TARGET_IP=...
+
+config LAN8720_LINK_PING_TIMEOUT_MS
+	int "ICMP echo timeout (ms)"
+	default 3000
+	help
+	  How long to wait for the ICMP echo reply before declaring
+	  the link-down FAIL. Default 3000 ms.
+
+endif # LAN8720_LINK

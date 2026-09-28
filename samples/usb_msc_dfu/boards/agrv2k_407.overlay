@@ -1,0 +1,26 @@
+/*
+ * Copyright (c) 2026 AgRV Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * The one disk this sample shows over USB twice.
+ *
+ * The MSC class registers it as the logical unit "RAM" (a raw block device
+ * the host sees as a removable disk), and the DFU image callbacks in
+ * src/main.c address the same disk_access name "RAM", so a write on either
+ * path is visible on the other.
+ *
+ * 128 x 512 B = 64 KiB. With no ram-region the zephyr,ram-disk driver
+ * allocates the store in SRAM; USB0 (DP/DM are fixed-pin, see the board
+ * dtsi) already has status = "okay" via the zephyr_udc0 label, so this
+ * overlay only adds the disk.
+ */
+/ {
+	ramdisk0: ramdisk0 {
+		compatible = "zephyr,ram-disk";
+		disk-name = "RAM";
+		sector-size = <512>;
+		sector-count = <128>;
+	};
+};

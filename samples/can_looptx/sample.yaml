@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for can_looptx. Build-only: the test streams
+# frames on a real CAN bus and needs an external peer (or a
+# scope on PIN_39) for ACK — not runnable under twister.
+sample:
+  name: can_looptx
+  description: CAN0 NORMAL-mode burst generator — 5-frame bursts @ 125 kbps, infinite
+tests:
+  sample.can_looptx.agm_agrv2k_407:
+    build_only: true
+    # CAN operation IS validated on hardware (2026-09-12): 125 kbit/s
+    # id=0x123 bursts were decoded continuously by an ESP32-C3 peer over two
+    # SN65HVD230s (see `the development notes (not published here)`). `skip` stays only
+    # because twister has no dev board/transceivers to run this against.
+    skip: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - can

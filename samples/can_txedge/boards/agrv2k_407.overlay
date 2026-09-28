@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable CAN0 (can0) on agrv2k_407 with the sample's bitrate.
+ *
+ * can_txedge measures on-wire TX polarity + real bit time by
+ * tight-loop sampling the RX0 pin (GPIO7.3) while the CAN
+ * controller transmits in self-test mode with PIN_39 jumpered to
+ * PIN_38. 125 kbps matches the eval board default. Re-declared
+ * here for sample visibility.
+ */
+&can0 {
+	status = "okay";
+	bitrate = <125000>;
+};

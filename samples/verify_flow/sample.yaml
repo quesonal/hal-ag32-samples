@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: verify_flow
+  description: |
+    The application half of the end-to-end verification flow: it runs from the
+    loader's on-die slot, reads the boot record back through the driver's
+    public API, reads the MCUboot header the loader verified, answers the
+    trial-boot handshake and prints a ledger the host script
+    (tools/verify_flow.sh) asserts on. Needs the loader's bitstream/board setup
+    (canonical 200 MHz bitstream), so the case is build_only.
+tests:
+  # The layout the signed flow needs: linked one MCUboot header past the slot
+  # base, because the loader hands a container's payload to `slot + hdr_size`
+  # and the header occupies that gap (imgtool's --pin-header; sign_image.py
+  # fills the same gap).
+  sample.verify_flow.agm_agrv2k_407:
+    build_only: true
+    extra_configs:
+      - CONFIG_ROM_START_OFFSET=0x20
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

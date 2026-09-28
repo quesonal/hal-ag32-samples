@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Twister metadata for can_rxmon. Build-only: the test passively
+# listens to a live CAN bus (an attached peer + transceiver are
+# required to observe anything), so it is not runnable under
+# twister.
+sample:
+  name: can_rxmon
+  description: CAN0 NORMAL-mode RX-only monitor — accept-all filter, RXERR drop diagnostic
+tests:
+  sample.can_rxmon.agm_agrv2k_407:
+    build_only: true
+    # CAN driver TX IS validated (2026-09-12, §3.18). This RX-only monitor
+    # still needs a live peer bus to produce any output, so `skip` stays.
+    skip: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - drivers
+      - can

@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: i2c_scan
+  description: I2C0 bus scan on agrv2k_407 (AGM OpenCores I2C driver)
+tests:
+  sample.i2c_scan.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

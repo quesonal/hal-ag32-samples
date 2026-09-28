@@ -1,0 +1,29 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * MOSI->MISO loopback through the fabric's full-duplex capture.
+ *
+ * Both controllers are claimed: the bitstream decides which one is wired to
+ * the fabric patch (the sample's Kconfig picks which one drives the clock).
+ * cpld0 is the window where the patch keeps its CTRL register and the bytes
+ * it captured on MISO; dma0 drains the window FIFO for captures longer than
+ * four bytes.
+ *
+ * Feed the patch's MISO input from its own MOSI output -- either with a
+ * jumper between the two pins, or in the fabric (SPI1_SI_IO0 -> so_io1 in the
+ * VE) -- and the capture contains what the engine actually transmitted.
+ */
+&spi0 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&cpld0 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};

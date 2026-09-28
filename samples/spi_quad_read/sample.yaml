@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: spi_quad_read
+  description: |
+    Read the on-board SPI NOR through the generic SPI API with
+    SPI_LINES_DUAL/QUAD. Requires the bitstream to route IO2/IO3 to the
+    flash's WP#/HOLD# pins: the vendor's 200 MHz reference
+    (~/spi_full_mac_bitstream_200mhz/, measured 2026-09-25) and the 97pad
+    100 MHz one (~/spi_full_bitstream_97pad/, measured 2026-09-14) both do,
+    but the repository's own generated board.bin (header pin map) does not, so
+    the case is
+    build_only.
+tests:
+  sample.spi_quad_read.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32

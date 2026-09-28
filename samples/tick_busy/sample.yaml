@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+sample:
+  name: tick_busy
+  description: |
+    tick advances while a busy thread never sleeps (MTIP timer,
+    `the development notes (not published here)`) — agrv2k_407 kernel smoke test.
+tests:
+  sample.tick_busy.agm_agrv2k_407:
+    build_only: true
+    platform_allow:
+      - agrv2k_407
+    integration_platforms:
+      - agrv2k_407
+    tags:
+      - ci_build
+      - hal_ag32
+      - kernel
+      - timer

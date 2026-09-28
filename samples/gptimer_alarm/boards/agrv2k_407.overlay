@@ -1,0 +1,9 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Enable GPTIMER0 (gpt0) on agrv2k_407. The counter_agm_gptimer
+ * driver enables the unit APB clock gate itself at init; channel 0
+ * (compare channel 0) carries the alarm.
+ */
+&gpt0 {
+	status = "okay";
+};

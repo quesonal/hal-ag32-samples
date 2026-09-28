@@ -1,0 +1,122 @@
+# Config options for the spi_loopback sample application
+
+# Copyright (c) 2026 AgRV Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "AgRV2K SPI MOSI->MISO loopback sample"
+
+choice APP_LOOP_CONTROLLER
+	prompt "SPI controller that clocks the transfer"
+	default APP_LOOP_CONTROLLER_SPI0
+	help
+	  The fabric patch taps one controller's SCK/CSN/MOSI; pick the one the
+	  bitstream routes (an explicit choice because the fabric has no
+	  capture-clear, so a controller it does not tap just replays the
+	  previous capture).
+
+config APP_LOOP_CONTROLLER_SPI0
+	bool "SPI0 (0x40012000)"
+
+config APP_LOOP_CONTROLLER_SPI1
+	bool "SPI1 (0x40013000)"
+
+endchoice
+
+menu "Fabric patch layout"
+
+config APP_LOOP_CTRL_OFFSET
+	int "Window offset of the fabric control register"
+	default 0
+
+config APP_LOOP_DATA_OFFSET
+	int "Window offset of the fabric RX data register"
+	default 4
+
+config APP_LOOP_CPOL
+	bool "Drive CPOL = 1"
+	default n
+
+config APP_LOOP_CPHA
+	bool "Drive CPHA = 1"
+	default n
+
+endmenu
+
+menu "DMA plumbing"
+
+config APP_LOOP_FIFO_DMA_CHANNEL
+	int "DMA channel draining the fabric RX FIFO"
+	default 5
+
+config APP_LOOP_FIFO_DMA_REQUEST
+	int "Peripheral request of the fabric RX FIFO"
+	default 1
+	help
+	  ext_dma_DMACBREQ[0] is wired to EXT_DMA0_REQ = 1 in the SDK.
+
+config APP_LOOP_TX_DMA_CHANNEL
+	int "DMA channel used by the experimental engine TX DMA test"
+	default 6
+
+config APP_LOOP_TX_DMA_REQUEST
+	int "Engine TX DMA request line (SPI0 = 6, SPI1 = 8)"
+	default 6
+
+config APP_LOOP_EXPERIMENTAL_TX_DMA
+	bool "Run the >32 B TX-DMA tests"
+	default y
+	help
+	  Transmit 36 bytes, i.e. the shape the SDK's SPI_Send_Long and
+	  SPI_FLASH_WritePage build: spi_agm feeds phase0 from the data register
+	  and hands the rest to the DMAC. The loopback capture shows whether the
+	  bytes that reach MOSI are the ones that were requested.
+
+config APP_LOOP_DIRECT_TX_DMA
+	bool "Also run the hand-programmed 36-byte engine TX-DMA probe"
+	default n
+	help
+	  Repeat the 36-byte transmit with the engine and the DMAC programmed
+	  from the sample (no spi_agm). This was the characterisation probe that
+	  first showed the TX-DMA shape works; keep it off unless you are
+	  re-running that investigation.
+
+endmenu
+
+config APP_LOOP_LONG_BYTES
+	int "Length of the long TX + long RX test (0 disables it)"
+	default 256
+	range 0 4096
+	help
+	  Transmit this many bytes through the driver -- past 32 bytes, so the
+	  DMAC feeds the engine -- while the fabric captures the same number of
+	  bytes into its FIFO and a second DMAC drains it. That is the "long TX
+	  and long RX at the same time" shape: the driver's own RX path cannot
+	  do it (its DMA phase has to be the last one), but the fabric's RX is
+	  an independent channel.
+
+	  The patch's FIFO is 256 words (1024 bytes) deep. Values up to that sit
+	  entirely in the FIFO; longer ones make the drain DMAC chase the
+	  producer, which is what the request line is for -- measure it rather
+	  than assume it.
+
+config APP_LOOP_DUMMY_BYTES
+	int "Filler bytes clocked with the engine's DUMMY TX phase (0 disables)"
+	default 32
+	range 0 4095
+	help
+	  Clocks this many filler bytes with PHASE_ACTION = DUMMY TX, i.e. with
+	  no TX buffer and no DMA, and checks that the fabric saw exactly that
+	  many clocks (its capture DMA has to fill its buffer).
+
+config APP_LOOP_CONTINUOUS
+	bool "Keep transmitting in a loop so a meter can see the pins move"
+	default y
+	help
+	  After the tests, repeat the four-byte transfer forever instead of
+	  idling. A multimeter then reads an intermediate DC level on the
+	  patch's MOSI pin while a transfer runs (and on its MISO pin when the
+	  loop is wired), which is what distinguishes "the fabric never drives
+	  the pin" from "the loop is missing". Turn it off to get a quiet board
+	  after the run.
+
+source "Kconfig.zephyr"

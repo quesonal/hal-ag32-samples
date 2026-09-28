@@ -1,0 +1,136 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Two-flash A/B: the boot record and the image stores live in the on-board
+ * SPI NOR, the application slot and everything fabric-related in the on-die
+ * flash. Note the asymmetry: the *staging* for fabric images does **not**
+ * move to the NOR -- the fabric A/B slots, their record and the factory
+ * region are fixed on-die by the SoC (agm_bitstream.h), because fcb.c has to
+ * find the record before any driver runs, in every image. The NOR only holds
+ * application images here. This is *not* the default any more (the default
+ * keeps everything on-die, see boards/agrv2k_407.overlay) -- use it when the
+ * external NOR is there and its 2 MiB are wanted:
+ *
+ *   west build -d /tmp/b_nor -b agrv2k_407 --pristine=auto \
+ *       modules/hal_ag32/samples/spi_boot_loader -- \
+ *       -DEXTRA_DTC_OVERLAY_FILE=boards/agrv2k_407_ext_nor.overlay
+ *
+ * Everything below is the layout; the loader's own region and the trial-boot
+ * watchdog are set up the same way the default overlay does it.
+ */
+/*
+ * The on-board SPI NOR, as samples/spi_nor_flash/spi_flash_id set it up.
+ *
+ * Which controller reaches the flash is a bitstream property: the canonical
+ * 200 MHz bitstream (`<your canonical bitstream>`) puts
+ * it behind SPI0's fabric patch -- measured 2026-09-17 with spi_flash_id:
+ * `spi@40012000` reads RDID 68 40 15, SPI1 reads zeros. Both are enabled
+ * here so the loader works on either routing; the flash node is only
+ * attached to SPI0, which is the one the loader uses.
+ */
+&spi0 {
+	status = "okay";
+
+	ext_flash: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <25000000>;
+		jedec-id = [68 40 15];
+		/* Binding says "capacity in bits": 16 Mbit = 2 MiB. */
+		size = <0x1000000>;
+	};
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
+
+/*
+ * The loader's own region, i.e. everything below the application slot.
+ *
+ * This is not decoration: pointing `/chosen/zephyr,flash` at a *partition*
+ * is what gives the RISC-V linker its ROM base and size
+ * (CONFIG_FLASH_BASE_ADDRESS / CONFIG_FLASH_SIZE, see
+ * include/zephyr/arch/riscv/common/linker.ld), so a loader that grows past
+ * its region fails the build instead of running into whatever the next
+ * region holds -- measured 2026-09-18: the signed loader (72768 B) silently
+ * grew into the on-die layout's boot record at 0x010000, and both the build
+ * and the flash write reported success.
+ *
+ * The region is `slot-address - flash base` (the slot below is the first
+ * thing that must not be overwritten); the default on-die overlay sizes it
+ * from the boot node's `loader-size` instead.
+ */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		loader_region: partition@80000000 {
+			label = "boot_loader";
+			reg = <0x80000000 0x30000>;
+		};
+	};
+};
+
+/ {
+	chosen {
+		zephyr,flash = &loader_region;
+	};
+};
+
+/*
+ * The bootloader's storage layout (the "two flashes" family of the binding:
+ * every offset is spelled out because the two flashes are independent address
+ * spaces).
+ */
+/ {
+	boot: boot {
+		compatible = "agm,agrv2k-boot";
+		status = "okay";
+
+		store-flash = <&ext_flash>;
+		on-die-flash = <&flash0>;
+
+		/* External NOR: the record takes sectors 0 and 1 (it is an
+		 * append log, see the port record (peripherals) 3.26.24),
+		 * the stores follow 512 KiB apart. */
+		record-offset = <0x000000>;
+		record-size = <0x001000>;
+		store-a-offset = <0x002000>;
+		store-b-offset = <0x081000>;
+		store-max-size = <0x07f000>;
+
+		/* On-die flash: application slot, then the fabric reservation. */
+		slot-address = <0x80030000>;
+		slot-size = <0x00080000>;
+		bitstream-address = <0x800e7000>;
+		bitstream-size = <0x00019000>;
+
+	};
+};
+
+/*
+ * The backup-domain watchdog the loader arms before a trial boot (W3 in
+ * the boot/DFU notes): the IWDG is the only reset source that also runs
+ * in standby, so the dtsi leaves it disabled and each user has to ask for it.
+ */
+&iwdg0 {
+	status = "okay";
+};
+
+/* Same CRC unit as the on-die layout: the loader CRCs every slot it boots
+ * (see the on-die overlay for the measurement and the chosen-node rule). */
+&crc0 {
+	status = "okay";
+};
+
+/ {
+	chosen {
+		zephyr,crc = &crc0;
+	};
+};
